@@ -1,10 +1,11 @@
 package br.com.eyesproject.eyes_project_back.modules.auth.application.ports.in;
 
-import br.com.eyesproject.eyes_project_back.modules.auth.domain.models.AuthToken;
+import br.com.eyesproject.eyes_project_back.modules.auth.presentation.dto.LoginRequest;
+import br.com.eyesproject.eyes_project_back.modules.auth.presentation.dto.LoginResponse;
 
 /**
  * Input port (Use Case) that the Presentation layer will invoke.
  */
 public interface LoginUseCase {
-    AuthToken login(String email, String password);
+    LoginResponse execute(LoginRequest request);
 }
