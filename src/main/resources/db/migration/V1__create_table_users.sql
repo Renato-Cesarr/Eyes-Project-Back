@@ -1,8 +1,8 @@
 CREATE TABLE tb_users (
     id UUID PRIMARY KEY,
-    name VARCHAR2(150) NOT NULL,
-    email VARCHAR2(150) NOT NULL UNIQUE,
-    password VARCHAR2(255) NOT NULL,
+    name VARCHAR(150) NOT NULL,
+    email VARCHAR(150) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
     active BOOLEAN NOT NULL DEFAULT TRUE,
     created_at TIMESTAMP NOT NULL,
     updated_at TIMESTAMP
