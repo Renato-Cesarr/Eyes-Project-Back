@@ -12,15 +12,29 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
     private final LoginUseCase loginUseCase;
+    private final br.com.eyesproject.eyes_project_back.modules.user.application.ports.in.ForgotPasswordUseCase forgotPasswordUseCase;
+    private final br.com.eyesproject.eyes_project_back.modules.user.application.ports.in.ResetPasswordUseCase resetPasswordUseCase;
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest request) {
         LoginResponse response = loginUseCase.execute(request);
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<Void> forgotPassword(@RequestBody @Valid br.com.eyesproject.eyes_project_back.modules.user.presentation.dto.ForgotPasswordRequest request) {
+        forgotPasswordUseCase.execute(request.getEmail());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<Void> resetPassword(@RequestBody @Valid br.com.eyesproject.eyes_project_back.modules.user.presentation.dto.ResetPasswordRequest request) {
+        resetPasswordUseCase.execute(request.getToken(), request.getPassword());
+        return ResponseEntity.ok().build();
     }
 }
