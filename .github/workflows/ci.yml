@@ -54,4 +54,5 @@ jobs:
           -Dsonar.projectKey=Renato-Cesarr_Eyes-Project-Back \
           -Dsonar.organization=renato-cesarr \
           -Dsonar.host.url=https://sonarcloud.io \
-          -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+          -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
+          -Dsonar.exclusions=**/*.sql
