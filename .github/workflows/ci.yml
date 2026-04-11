@@ -11,6 +11,21 @@ jobs:
     name: Build + Test + Sonar
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: eyes_project_db
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout código
         uses: actions/checkout@v4
@@ -26,6 +41,13 @@ jobs:
 
       - name: Build + Testes
         run: ./mvnw clean verify
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: eyes_project_db
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          JWT_SECRET: testing_secret_key
 
       - name: Rodar SonarCloud
         run: ./mvnw sonar:sonar \
