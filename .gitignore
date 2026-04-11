@@ -1,10 +1,5 @@
-.metadata/
-.mvn/
-.sonarlint/
-*ser
-HELP.md
 target/
-.mvn/wrapper/maven-wrapper.jar
+!.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
 
@@ -39,11 +34,13 @@ build/
 ### Volumes ###
 .volumes/
 
-### Enviroments ###
+### Environments ###
 .env
 infra/
 
+### Logs ###
 logs/
+*.log
 
-.mvn/**
-.sonarlint/**
+### Sonar ###
+.sonarlint/
