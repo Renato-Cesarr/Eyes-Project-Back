@@ -36,7 +36,7 @@ public class GlobalExceptionHandler {
 
         ErrorResponse error = ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
-                .status(HttpStatus.UNPROCESSABLE_ENTITY.value())
+                .status(422)
                 .error("Validation Failed")
                 .message("Invalid input data")
                 .path(request.getRequestURI())
