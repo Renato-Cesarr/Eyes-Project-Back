@@ -5,8 +5,8 @@ ALTER TABLE tb_users ALTER COLUMN password DROP NOT NULL;
 CREATE TABLE tb_auth_tokens (
     id UUID PRIMARY KEY,
     user_id UUID NOT NULL,
-    token TEXT NOT NULL UNIQUE,
-    type TEXT NOT NULL,
+    token CHARACTER VARYING(255) NOT NULL UNIQUE,
+    type CHARACTER VARYING(50) NOT NULL,
     expires_at TIMESTAMP NOT NULL,
     created_at TIMESTAMP NOT NULL,
     CONSTRAINT fk_auth_token_user FOREIGN KEY (user_id) REFERENCES tb_users (id) ON DELETE CASCADE
