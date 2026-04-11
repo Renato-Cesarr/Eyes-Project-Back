@@ -1,5 +1,6 @@
 package br.com.eyesproject.eyes_project_back.modules.user.application.services;
 
+import br.com.eyesproject.eyes_project_back.global.exceptions.DomainException;
 import br.com.eyesproject.eyes_project_back.modules.user.application.ports.in.CreateUserUseCase;
 import br.com.eyesproject.eyes_project_back.modules.user.application.ports.out.AuthTokenRepository;
 import br.com.eyesproject.eyes_project_back.modules.user.application.ports.out.EmailSenderPort;
@@ -24,7 +25,7 @@ public class CreateUserUseCaseImpl implements CreateUserUseCase {
     @Override
     public User execute(User userParam) {
         if (userRepository.findByEmail(userParam.getEmail()).isPresent()) {
-            throw new RuntimeException("User email already exists");
+            throw new DomainException("Este e-mail já está cadastrado no sistema");
         }
 
         // Domain preparation: no password yet, inactive until setup.

@@ -41,7 +41,7 @@ public class SmtpEmailAdapter implements EmailSenderPort {
             javaMailSender.send(message);
 
         } catch (MessagingException e) {
-            throw new RuntimeException("Failed to send invitation email", e);
+            throw new org.springframework.mail.MailSendException("Erro ao enviar e-mail de convite", e);
         }
     }
 
@@ -68,7 +68,7 @@ public class SmtpEmailAdapter implements EmailSenderPort {
             javaMailSender.send(message);
 
         } catch (MessagingException e) {
-            throw new RuntimeException("Failed to send password reset email", e);
+            throw new org.springframework.mail.MailSendException("Erro ao enviar e-mail de recuperação", e);
         }
     }
 }

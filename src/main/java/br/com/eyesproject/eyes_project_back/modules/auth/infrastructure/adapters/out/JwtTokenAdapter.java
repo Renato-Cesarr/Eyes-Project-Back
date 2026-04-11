@@ -2,6 +2,7 @@ package br.com.eyesproject.eyes_project_back.modules.auth.infrastructure.adapter
 
 import br.com.eyesproject.eyes_project_back.modules.auth.application.ports.out.TokenProvider;
 import br.com.eyesproject.eyes_project_back.modules.user.domain.models.User;
+import br.com.eyesproject.eyes_project_back.global.exceptions.DomainException;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTCreationException;
@@ -34,7 +35,7 @@ public class JwtTokenAdapter implements TokenProvider {
                     .withExpiresAt(generateExpirationDate())
                     .sign(algorithm);
         } catch (JWTCreationException exception) {
-            throw new RuntimeException("Error while generating token", exception);
+            throw new DomainException("Erro ao gerar token de acesso");
         }
     }
 

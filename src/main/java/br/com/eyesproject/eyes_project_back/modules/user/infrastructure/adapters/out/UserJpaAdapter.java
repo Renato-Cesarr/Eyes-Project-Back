@@ -43,7 +43,7 @@ public class UserJpaAdapter implements UserRepository {
                 .name(user.getName())
                 .email(user.getEmail())
                 .password(user.getPassword())
-                .active(user.getActive() != null ? user.getActive() : true)
+                .active(user.getActive() == null || user.getActive())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();

@@ -28,7 +28,7 @@ public class ForgotPasswordUseCaseImpl implements ForgotPasswordUseCase {
 
         // Se o usuário não existir ou não estiver ativo, nós não dizemos explicitamente 
         // por segurança (evitar enumeration). Apenas saímos silenciosamente ou logamos.
-        if (user == null || !user.getActive()) {
+        if (user == null || Boolean.FALSE.equals(user.getActive())) {
             return;
         }
 

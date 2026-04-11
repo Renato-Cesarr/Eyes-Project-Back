@@ -1,5 +1,6 @@
 package br.com.eyesproject.eyes_project_back.modules.user.application.services;
 
+import br.com.eyesproject.eyes_project_back.global.exceptions.DomainException;
 import br.com.eyesproject.eyes_project_back.modules.user.application.ports.in.SetupPasswordUseCase;
 import br.com.eyesproject.eyes_project_back.modules.user.application.ports.out.AuthTokenRepository;
 import br.com.eyesproject.eyes_project_back.modules.user.application.ports.out.UserRepository;
@@ -23,11 +24,11 @@ public class SetupPasswordUseCaseImpl implements SetupPasswordUseCase {
     @Override
     public void execute(String tokenParam, String newPassword) {
         AuthToken setupToken = authTokenRepository.findByTokenAndType(tokenParam, TokenType.SETUP)
-                .orElseThrow(() -> new RuntimeException("Invalid or expired setup token"));
+                .orElseThrow(() -> new DomainException("Link de ativação inválido ou expirado"));
 
         if (setupToken.isExpired()) {
             authTokenRepository.deleteById(setupToken.getId());
-            throw new RuntimeException("Token has expired. Request a new invitation.");
+            throw new DomainException("O link de convite expirou. Solicite um novo acesso.");
         }
 
         User user = setupToken.getUser();

@@ -1,5 +1,6 @@
 package br.com.eyesproject.eyes_project_back.modules.user.application.services;
 
+import br.com.eyesproject.eyes_project_back.global.exceptions.DomainException;
 import br.com.eyesproject.eyes_project_back.modules.user.application.ports.in.ResetPasswordUseCase;
 import br.com.eyesproject.eyes_project_back.modules.user.application.ports.out.AuthTokenRepository;
 import br.com.eyesproject.eyes_project_back.modules.user.application.ports.out.UserRepository;
@@ -21,11 +22,11 @@ public class ResetPasswordUseCaseImpl implements ResetPasswordUseCase {
     @Override
     public void execute(String tokenParam, String newPassword) {
         AuthToken resetToken = authTokenRepository.findByTokenAndType(tokenParam, TokenType.RESET)
-                .orElseThrow(() -> new RuntimeException("Invalid or expired reset token"));
+                .orElseThrow(() -> new DomainException("Link de redefinição inválido ou expirado"));
 
         if (resetToken.isExpired()) {
             authTokenRepository.deleteById(resetToken.getId());
-            throw new RuntimeException("Token has expired. Request a new password reset.");
+            throw new DomainException("O link expirou. Solicite uma nova redefinição de senha.");
         }
 
         User user = resetToken.getUser();

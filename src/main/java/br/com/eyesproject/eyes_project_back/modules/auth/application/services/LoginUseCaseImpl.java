@@ -1,5 +1,6 @@
 package br.com.eyesproject.eyes_project_back.modules.auth.application.services;
 
+import br.com.eyesproject.eyes_project_back.global.exceptions.DomainException;
 import br.com.eyesproject.eyes_project_back.modules.auth.application.ports.in.LoginUseCase;
 import br.com.eyesproject.eyes_project_back.modules.auth.application.ports.out.TokenProvider;
 import br.com.eyesproject.eyes_project_back.modules.auth.presentation.dto.LoginRequest;
@@ -21,14 +22,14 @@ public class LoginUseCaseImpl implements LoginUseCase {
     @Override
     public LoginResponse execute(LoginRequest request) {
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Invalid email or password"));
+                .orElseThrow(() -> new DomainException("Dados de acesso inválidos"));
 
-        if (!user.getActive()) {
-            throw new RuntimeException("User account is disabled");
+        if (Boolean.FALSE.equals(user.getActive())) {
+            throw new DomainException("Conta de usuário desativada");
         }
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-            throw new RuntimeException("Invalid email or password");
+            throw new DomainException("Dados de acesso inválidos");
         }
 
         String token = tokenProvider.generateToken(user);
