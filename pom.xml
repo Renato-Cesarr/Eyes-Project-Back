@@ -28,6 +28,7 @@
 	</scm>
 	<properties>
 		<java.version>21</java.version>
+		<sonar.exclusions>src/main/resources/db/migration/**</sonar.exclusions>
 	</properties>
 	<dependencies>
 		<dependency>
