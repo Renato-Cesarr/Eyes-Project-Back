@@ -1,0 +1,60 @@
+name: CI Back-End
+
+on:
+  pull_request:
+    branches: [ "dev" ]
+  push:
+    branches: [ "dev" ]
+
+jobs:
+  build:
+    name: Build + Test + Sonar
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: eyes_project_db
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Dar permissão ao Maven
+        run: chmod +x ./mvnw
+
+      - name: Build + Testes
+        run: ./mvnw clean verify -Dspring.profiles.active=test
+        env:
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_NAME: eyes_project_db
+          DB_USER: postgres
+          DB_PASSWORD: postgres
+          JWT_SECRET: testing_secret_key
+
+      - name: Rodar SonarCloud
+        run: |
+          ./mvnw sonar:sonar \
+          -Dsonar.projectKey=Renato-Cesarr_Eyes-Project-Back \
+          -Dsonar.organization=renato-cesarr \
+          -Dsonar.host.url=https://sonarcloud.io \
+          -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
+          -Dsonar.exclusions=**/*.sql \
+          -Dsonar.coverage.exclusions=src/main/java/br/com/eyesproject/eyes_project_back/global/**/*,src/main/java/br/com/eyesproject/eyes_project_back/**/domain/models/*,src/main/java/br/com/eyesproject/eyes_project_back/**/presentation/dto/*
