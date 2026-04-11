@@ -40,7 +40,7 @@ jobs:
         run: chmod +x ./mvnw
 
       - name: Build + Testes
-        run: ./mvnw clean verify
+        run: ./mvnw clean verify -Dspring.profiles.active=test
         env:
           DB_HOST: localhost
           DB_PORT: 5432
