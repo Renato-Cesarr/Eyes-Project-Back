@@ -56,4 +56,5 @@ jobs:
           -Dsonar.organization=renato-cesarr \
           -Dsonar.host.url=https://sonarcloud.io \
           -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
-          -Dsonar.exclusions=**/*.sql
+          -Dsonar.exclusions=**/*.sql \
+          -Dsonar.coverage.exclusions=src/main/java/br/com/eyesproject/eyes_project_back/global/**/*,src/main/java/br/com/eyesproject/eyes_project_back/**/domain/models/*,src/main/java/br/com/eyesproject/eyes_project_back/**/presentation/dto/*

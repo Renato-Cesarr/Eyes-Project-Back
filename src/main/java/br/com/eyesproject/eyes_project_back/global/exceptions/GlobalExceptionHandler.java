@@ -42,6 +42,6 @@ public class GlobalExceptionHandler {
                 .path(request.getRequestURI())
                 .errors(validationErrors)
                 .build();
-        return new ResponseEntity<>(error, HttpStatus.UNPROCESSABLE_ENTITY);
+        return new ResponseEntity<>(error, HttpStatus.valueOf(422));
     }
 }
