@@ -21,7 +21,7 @@ jobs:
         ports:
           - 5432:5432
         options: >-
-          --health-cmd pg_isready
+          --health-cmd "pg_isready -U postgres -d eyes_project_db"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -55,11 +55,12 @@ jobs:
           JWT_SECRET: testing_secret_key
 
       - name: Rodar SonarCloud
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
           ./mvnw org.sonarsource.scanner.maven:sonar-maven-plugin:5.7.0.6970:sonar \
           -Dsonar.projectKey=Renato-Cesarr_Eyes-Project-Back \
           -Dsonar.organization=renato-cesarr \
           -Dsonar.host.url=https://sonarcloud.io \
-          -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
           -Dsonar.exclusions=**/*.sql \
           -Dsonar.coverage.exclusions=src/main/java/br/com/eyesproject/eyes_project_back/global/**/*,src/main/java/br/com/eyesproject/eyes_project_back/**/domain/models/*,src/main/java/br/com/eyesproject/eyes_project_back/**/presentation/dto/*
