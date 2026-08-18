@@ -35,9 +35,14 @@ jobs:
         with:
           distribution: 'temurin'
           java-version: '21'
+          cache: maven
 
       - name: Dar permissão ao Maven
         run: chmod +x ./mvnw
+
+      - name: Validar toolchain
+        shell: pwsh
+        run: ./scripts/check-toolchain.ps1
 
       - name: Build + Testes
         run: ./mvnw clean verify -Dspring.profiles.active=test
