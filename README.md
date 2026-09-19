@@ -72,6 +72,22 @@ inativos, removidos ou sem papel válido não são autenticados.
 - uma requisição anônima recebe `401` e um usuário autenticado sem o papel
   necessário recebe `403`.
 
+### Convite, ativação e recuperação
+
+- `POST /api/v1/users` é um convite administrativo e exige papel `ADMIN`;
+- `POST /api/v1/users/setup-password` é público porque o convidado ainda não
+  possui credenciais;
+- tokens `SETUP` e `RESET` são vinculados ao propósito, possuem expiração e são
+  consumidos uma única vez;
+- a alteração do usuário e o consumo do token acontecem na mesma transação;
+- requisições concorrentes são serializadas por bloqueio de escrita no token;
+- token inexistente, expirado, consumido ou de outro propósito retorna uma
+  mensagem neutra, sem revelar seu estado;
+- o valor do token não deve aparecer em logs, métricas ou mensagens de erro.
+
+O contrato executável está disponível em `/v3/api-docs` e na interface
+`/swagger-ui.html`. Rotas protegidas usam o esquema OpenAPI `bearerAuth`.
+
 ## Fluxo Git
 
 As funcionalidades partem de `dev`, usam `feat/<linear-id>-<nome-curto>` e
