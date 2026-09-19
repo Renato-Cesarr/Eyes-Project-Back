@@ -52,7 +52,8 @@ class SetupPasswordUseCaseImplTest {
         String newPassword = "new_secure_password";
         String encodedPassword = "encoded_new_secure_password";
 
-        when(authTokenRepository.findByTokenAndType(rawToken, TokenType.SETUP)).thenReturn(Optional.of(validToken));
+        when(authTokenRepository.findByTokenAndTypeForUpdate(rawToken, TokenType.SETUP))
+                .thenReturn(Optional.of(validToken));
         when(passwordEncoder.encode(newPassword)).thenReturn(encodedPassword);
 
         // Act
@@ -75,7 +76,8 @@ class SetupPasswordUseCaseImplTest {
         String rawToken = "invalid_setup_token_xyz";
         String newPassword = "new_secure_password";
 
-        when(authTokenRepository.findByTokenAndType(rawToken, TokenType.SETUP)).thenReturn(Optional.empty());
+        when(authTokenRepository.findByTokenAndTypeForUpdate(rawToken, TokenType.SETUP))
+                .thenReturn(Optional.empty());
 
         // Act & Assert
         DomainException exception = assertThrows(DomainException.class, () -> setupPasswordUseCase.execute(rawToken, newPassword));
@@ -87,22 +89,22 @@ class SetupPasswordUseCaseImplTest {
     }
 
     @Test
-    @DisplayName("Should throw DomainException and delete token when token is expired")
-    void shouldThrowDomainExceptionAndCleanupWhenTokenIsExpired() {
+    @DisplayName("Should reject an expired token with the same neutral response")
+    void shouldRejectExpiredTokenWithNeutralResponse() {
         // Arrange
         User user = UserFactory.createInactiveUser();
         AuthToken expiredToken = UserFactory.createExpiredToken(user, TokenType.SETUP);
         String rawToken = expiredToken.getToken();
         String newPassword = "new_secure_password";
 
-        when(authTokenRepository.findByTokenAndType(rawToken, TokenType.SETUP)).thenReturn(Optional.of(expiredToken));
+        when(authTokenRepository.findByTokenAndTypeForUpdate(rawToken, TokenType.SETUP))
+                .thenReturn(Optional.of(expiredToken));
 
         // Act & Assert
         DomainException exception = assertThrows(DomainException.class, () -> setupPasswordUseCase.execute(rawToken, newPassword));
-        assertEquals("O link de convite expirou. Solicite um novo acesso.", exception.getMessage());
+        assertEquals("Link de ativação inválido ou expirado", exception.getMessage());
 
-        // Verify cleanup happens
-        verify(authTokenRepository, times(1)).deleteById(expiredToken.getId());
+        verify(authTokenRepository, never()).deleteById(any());
         
         verify(passwordEncoder, never()).encode(anyString());
         verify(userRepository, never()).save(any(User.class));

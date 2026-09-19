@@ -77,6 +77,21 @@ class AuthTokenJpaAdapterTest {
     }
 
     @Test
+    @DisplayName("Should find and lock token before a single-use operation")
+    void shouldFindTokenByStringAndTypeForUpdate() {
+        when(springDataAuthTokenRepository.findByTokenAndTypeForUpdate(
+                domainToken.getToken(), TokenType.SETUP)).thenReturn(Optional.of(tokenEntity));
+
+        Optional<AuthToken> result = authTokenJpaAdapter.findByTokenAndTypeForUpdate(
+                domainToken.getToken(), TokenType.SETUP);
+
+        assertTrue(result.isPresent());
+        assertEquals(domainToken.getToken(), result.orElseThrow().getToken());
+        verify(springDataAuthTokenRepository).findByTokenAndTypeForUpdate(
+                domainToken.getToken(), TokenType.SETUP);
+    }
+
+    @Test
     @DisplayName("Should delete token by id")
     void shouldDeleteTokenById() {
         // Arrange

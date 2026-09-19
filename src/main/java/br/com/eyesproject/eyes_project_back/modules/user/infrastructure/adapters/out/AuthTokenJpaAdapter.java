@@ -29,6 +29,11 @@ public class AuthTokenJpaAdapter implements AuthTokenRepository {
     }
 
     @Override
+    public Optional<AuthToken> findByTokenAndTypeForUpdate(String token, TokenType type) {
+        return repository.findByTokenAndTypeForUpdate(token, type).map(this::mapToDomain);
+    }
+
+    @Override
     public void deleteById(String id) {
         repository.deleteById(UUID.fromString(id));
     }
