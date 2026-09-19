@@ -53,6 +53,8 @@ class InvitationActivationPostgresIntegrationTest {
 
     private static final String ACTIVATION_PATH = "/api/v1/users/setup-password";
     private static final String NEUTRAL_ACTIVATION_ERROR = "Link de ativação inválido ou expirado";
+    private static final String RESET_PATH = "/api/v1/auth/reset-password";
+    private static final String NEUTRAL_RESET_ERROR = "Link de redefinição inválido ou expirado";
 
     @Autowired
     private WebApplicationContext webApplicationContext;
@@ -207,6 +209,55 @@ class InvitationActivationPostgresIntegrationTest {
         }
     }
 
+    @Test
+    @DisplayName("An active user resets the password once with a valid RESET token")
+    void passwordResetConsumesTokenExactlyOnce() throws Exception {
+        User activeUser = saveUser("Password Owner", "password-owner@example.com", UserRole.STUDENT, true);
+        String resetToken = saveToken(activeUser, TokenType.RESET, LocalDateTime.now().plusMinutes(15));
+        String requestBody = passwordRequest(resetToken, "replacement-password");
+
+        mockMvc.perform(post(RESET_PATH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk());
+
+        User updatedUser = userRepository.findByEmail(activeUser.getEmail()).orElseThrow();
+        assertTrue(passwordEncoder.matches("replacement-password", updatedUser.getPassword()));
+        assertEquals(0, tokenCount(resetToken));
+
+        mockMvc.perform(post(RESET_PATH)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value(NEUTRAL_RESET_ERROR));
+    }
+
+    @Test
+    @DisplayName("Password recovery does not reveal whether an account exists")
+    void passwordRecoveryResponseIsNeutral() throws Exception {
+        User activeUser = saveUser("Recovery Owner", "recovery-owner@example.com", UserRole.STUDENT, true);
+        String requestBody = """
+                {"email":"%s"}
+                """.formatted(activeUser.getEmail());
+
+        mockMvc.perform(post("/api/v1/auth/forgot-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestBody))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(post("/api/v1/auth/forgot-password")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"email":"unknown@example.com"}
+                                """))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<String> tokenCaptor = ArgumentCaptor.forClass(String.class);
+        verify(emailSenderPort).sendPasswordResetEmail(
+                eq(activeUser.getEmail()), eq(activeUser.getName()), tokenCaptor.capture());
+        assertEquals(1, tokenCount(tokenCaptor.getValue()));
+    }
+
     private User saveUser(String name, String email, UserRole role, boolean active) {
         return userRepository.save(User.builder()
                 .name(name)
@@ -235,8 +286,12 @@ class InvitationActivationPostgresIntegrationTest {
     }
 
     private String activationRequest(String token) {
+        return passwordRequest(token, "new-password");
+    }
+
+    private String passwordRequest(String token, String password) {
         return """
-                {"token":"%s","password":"new-password"}
-                """.formatted(token);
+                {"token":"%s","password":"%s"}
+                """.formatted(token, password);
     }
 }
