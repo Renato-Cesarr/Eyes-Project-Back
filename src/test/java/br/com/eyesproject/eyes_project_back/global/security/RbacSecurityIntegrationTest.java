@@ -27,7 +27,9 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.options;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -156,5 +158,16 @@ class RbacSecurityIntegrationTest {
                 .andExpect(status().isOk());
 
         verify(setupPasswordUseCase).execute("token123", "secret123");
+    }
+
+    @Test
+    @DisplayName("CORS never enables browser-managed credentials for bearer authentication")
+    void corsDoesNotAllowBrowserManagedCredentials() throws Exception {
+        mockMvc.perform(options("/api/v1/auth/me")
+                        .header("Origin", "http://localhost:4200")
+                        .header("Access-Control-Request-Method", "GET"))
+                .andExpect(status().isOk())
+                .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:4200"))
+                .andExpect(header().doesNotExist("Access-Control-Allow-Credentials"));
     }
 }
