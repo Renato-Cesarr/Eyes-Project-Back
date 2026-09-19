@@ -23,6 +23,8 @@ public class User {
     private String email;
     private String password;
     private Boolean active;
+    @Builder.Default
+    private UserRole role = UserRole.STUDENT;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

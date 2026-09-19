@@ -2,6 +2,7 @@ package br.com.eyesproject.eyes_project_back.modules.user.infrastructure.adapter
 
 import br.com.eyesproject.eyes_project_back.modules.user.application.ports.out.UserRepository;
 import br.com.eyesproject.eyes_project_back.modules.user.domain.models.User;
+import br.com.eyesproject.eyes_project_back.modules.user.domain.models.UserRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -37,6 +38,11 @@ public class UserJpaAdapter implements UserRepository {
                 .map(this::mapToDomain);
     }
 
+    @Override
+    public boolean existsByRole(UserRole role) {
+        return springDataUserRepository.existsByRole(role);
+    }
+
     private UserJpaEntity mapToEntity(User user) {
         return UserJpaEntity.builder()
                 .id(user.getId() != null ? UUID.fromString(user.getId()) : null)
@@ -44,6 +50,7 @@ public class UserJpaAdapter implements UserRepository {
                 .email(user.getEmail())
                 .password(user.getPassword())
                 .active(user.getActive() == null || user.getActive())
+                .role(user.getRole())
                 .createdAt(user.getCreatedAt())
                 .updatedAt(user.getUpdatedAt())
                 .build();
@@ -56,6 +63,7 @@ public class UserJpaAdapter implements UserRepository {
                 .email(entity.getEmail())
                 .password(entity.getPassword())
                 .active(entity.getActive())
+                .role(entity.getRole())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
                 .build();

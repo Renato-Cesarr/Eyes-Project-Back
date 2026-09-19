@@ -36,6 +36,42 @@ declaradas no repositório. A CI executa o mesmo diagnóstico antes do build.
 As credenciais de banco, SMTP e JWT devem ser fornecidas por variáveis de
 ambiente ou secrets da CI. Nunca versionamos `.env`, tokens ou senhas.
 
+### Primeiro administrador
+
+O bootstrap do primeiro administrador é opcional, idempotente e desativado por
+padrão. Use-o somente em um ambiente controlado, fornecendo todas as variáveis:
+
+```text
+BOOTSTRAP_ADMIN_ENABLED=true
+BOOTSTRAP_ADMIN_NAME=<nome>
+BOOTSTRAP_ADMIN_EMAIL=<email>
+BOOTSTRAP_ADMIN_PASSWORD=<senha-temporaria-segura>
+```
+
+Se já existir um usuário com o e-mail informado, ele será promovido sem trocar
+uma senha ativa. Se qualquer administrador já existir, o bootstrap não altera
+dados. Após o primeiro provisionamento, desative a flag e remova a senha do
+ambiente.
+
+Os usuários criados pelo fluxo normal recebem sempre o papel `STUDENT`.
+
+## Autenticação e autorização
+
+O MVP possui dois papéis: `ADMIN` e `STUDENT`. O login e o endpoint autenticado
+`GET /api/v1/auth/me` devolvem o papel necessário à interface, e o JWT também
+carrega a claim `role`.
+
+A API não usa a claim do cliente como fonte de autorização: a cada requisição,
+o filtro valida o token e carrega o papel atual persistido no banco. Usuários
+inativos, removidos ou sem papel válido não são autenticados.
+
+- rotas de autenticação por `POST` permanecem públicas;
+- a definição da senha de convite permanece pública;
+- `/api/v1/users/**`, `/api/v1/audit/**` e `/api/v1/access-requests/**` exigem
+  `ADMIN`;
+- uma requisição anônima recebe `401` e um usuário autenticado sem o papel
+  necessário recebe `403`.
+
 ## Fluxo Git
 
 As funcionalidades partem de `dev`, usam `feat/<linear-id>-<nome-curto>` e

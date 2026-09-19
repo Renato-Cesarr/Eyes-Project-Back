@@ -5,6 +5,7 @@ import br.com.eyesproject.eyes_project_back.modules.auth.presentation.dto.LoginR
 import br.com.eyesproject.eyes_project_back.modules.auth.presentation.dto.LoginResponse;
 import br.com.eyesproject.eyes_project_back.modules.user.application.ports.in.ForgotPasswordUseCase;
 import br.com.eyesproject.eyes_project_back.modules.user.application.ports.in.ResetPasswordUseCase;
+import br.com.eyesproject.eyes_project_back.modules.user.domain.models.UserRole;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -60,6 +61,7 @@ class AuthControllerTest {
                         .id("123")
                         .name("Test User")
                         .email("test@test.com")
+                        .role(UserRole.STUDENT)
                         .build())
                 .build();
 
@@ -69,7 +71,8 @@ class AuthControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("dummy-jwt-token"));
+                .andExpect(jsonPath("$.token").value("dummy-jwt-token"))
+                .andExpect(jsonPath("$.user.role").value("STUDENT"));
     }
 
     @Test

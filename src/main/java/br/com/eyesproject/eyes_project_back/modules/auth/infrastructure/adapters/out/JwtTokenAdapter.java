@@ -32,6 +32,7 @@ public class JwtTokenAdapter implements TokenProvider {
                     .withSubject(user.getEmail())
                     .withClaim("id", user.getId())
                     .withClaim("name", user.getName())
+                    .withClaim("role", user.getRole().name())
                     .withExpiresAt(generateExpirationDate())
                     .sign(algorithm);
         } catch (JWTCreationException exception) {

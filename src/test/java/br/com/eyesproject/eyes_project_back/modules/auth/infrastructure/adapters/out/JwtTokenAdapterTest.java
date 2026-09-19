@@ -2,6 +2,7 @@ package br.com.eyesproject.eyes_project_back.modules.auth.infrastructure.adapter
 
 import br.com.eyesproject.eyes_project_back.modules.user.domain.models.User;
 import br.com.eyesproject.eyes_project_back.utils.factories.UserFactory;
+import com.auth0.jwt.JWT;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -33,6 +34,7 @@ class JwtTokenAdapterTest {
         // Assert
         assertNotNull(token);
         assertFalse(token.isEmpty());
+        assertEquals(user.getRole().name(), JWT.decode(token).getClaim("role").asString());
     }
 
     @Test

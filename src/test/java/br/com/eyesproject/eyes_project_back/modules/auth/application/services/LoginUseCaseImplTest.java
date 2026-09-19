@@ -57,6 +57,7 @@ class LoginUseCaseImplTest {
         assertEquals(user.getId(), response.getUser().getId());
         assertEquals(user.getName(), response.getUser().getName());
         assertEquals(user.getEmail(), response.getUser().getEmail());
+        assertEquals(user.getRole(), response.getUser().getRole());
 
         verify(userRepository, times(1)).findByEmail(request.getEmail());
         verify(passwordEncoder, times(1)).matches(request.getPassword(), user.getPassword());

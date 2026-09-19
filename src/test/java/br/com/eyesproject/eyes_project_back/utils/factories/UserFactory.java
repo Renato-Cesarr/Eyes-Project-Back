@@ -3,6 +3,7 @@ package br.com.eyesproject.eyes_project_back.utils.factories;
 import br.com.eyesproject.eyes_project_back.modules.user.domain.models.AuthToken;
 import br.com.eyesproject.eyes_project_back.modules.user.domain.models.TokenType;
 import br.com.eyesproject.eyes_project_back.modules.user.domain.models.User;
+import br.com.eyesproject.eyes_project_back.modules.user.domain.models.UserRole;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -20,9 +21,16 @@ public class UserFactory {
                 .email("johndoe@test.com")
                 .password("encoded_password")
                 .active(true)
+                .role(UserRole.STUDENT)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
+    }
+
+    public static User createAdminUser() {
+        User user = createValidUser();
+        user.setRole(UserRole.ADMIN);
+        return user;
     }
 
     public static User createInactiveUser() {

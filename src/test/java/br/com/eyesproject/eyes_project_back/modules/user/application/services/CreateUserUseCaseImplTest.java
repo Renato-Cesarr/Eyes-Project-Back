@@ -6,6 +6,7 @@ import br.com.eyesproject.eyes_project_back.modules.user.application.ports.out.E
 import br.com.eyesproject.eyes_project_back.modules.user.application.ports.out.UserRepository;
 import br.com.eyesproject.eyes_project_back.modules.user.domain.models.AuthToken;
 import br.com.eyesproject.eyes_project_back.modules.user.domain.models.User;
+import br.com.eyesproject.eyes_project_back.modules.user.domain.models.UserRole;
 import br.com.eyesproject.eyes_project_back.utils.factories.UserFactory;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -64,6 +65,7 @@ class CreateUserUseCaseImplTest {
         // Ensure Domain rules applied:
         assertFalse(savedUserArg.getActive(), "User should be inactive immediately after creation");
         assertNull(savedUserArg.getPassword(), "User password should be null pending setup");
+        assertEquals(UserRole.STUDENT, savedUserArg.getRole());
         assertEquals(requestUser.getEmail(), savedUserArg.getEmail());
 
         verify(authTokenRepository).save(tokenCaptor.capture());

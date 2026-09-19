@@ -1,6 +1,7 @@
 package br.com.eyesproject.eyes_project_back.modules.user.application.ports.out;
 
 import br.com.eyesproject.eyes_project_back.modules.user.domain.models.User;
+import br.com.eyesproject.eyes_project_back.modules.user.domain.models.UserRole;
 import java.util.Optional;
 
 /**
@@ -10,4 +11,5 @@ public interface UserRepository {
     User save(User user);
     Optional<User> findById(String id);
     Optional<User> findByEmail(String email);
+    boolean existsByRole(UserRole role);
 }

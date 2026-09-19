@@ -9,12 +9,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -30,10 +31,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         
         if (token != null) {
             String subjectEmail = tokenProvider.validateToken(token);
-            if (!subjectEmail.isEmpty()) {
+            if (subjectEmail != null && !subjectEmail.isBlank()) {
                 Optional<User> optionalUser = userRepository.findByEmail(subjectEmail);
-                if (optionalUser.isPresent()) {
-                    var authentication = new UsernamePasswordAuthenticationToken(optionalUser.get(), null, Collections.emptyList());
+                if (optionalUser.filter(this::canAuthenticate).isPresent()) {
+                    User user = optionalUser.get();
+                    var authorities = List.of(new SimpleGrantedAuthority(user.getRole().authority()));
+                    var authentication = new UsernamePasswordAuthenticationToken(user, null, authorities);
                     SecurityContextHolder.getContext().setAuthentication(authentication);
                 }
             }
@@ -47,6 +50,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return null;
         }
-        return authHeader.replace("Bearer ", "");
+        String token = authHeader.substring("Bearer ".length()).trim();
+        return token.isEmpty() ? null : token;
+    }
+
+    private boolean canAuthenticate(User user) {
+        return Boolean.TRUE.equals(user.getActive()) && user.getRole() != null;
     }
 }

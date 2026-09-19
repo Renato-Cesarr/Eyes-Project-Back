@@ -1,5 +1,6 @@
 package br.com.eyesproject.eyes_project_back.modules.user.infrastructure.adapters.out;
 
+import br.com.eyesproject.eyes_project_back.modules.user.domain.models.UserRole;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -33,6 +34,11 @@ public class UserJpaEntity {
     @Column(nullable = false)
     @Builder.Default
     private Boolean active = true;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    @Builder.Default
+    private UserRole role = UserRole.STUDENT;
 
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
