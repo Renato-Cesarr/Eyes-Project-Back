@@ -8,6 +8,7 @@ import br.com.eyesproject.eyes_project_back.modules.user.application.ports.out.U
 import br.com.eyesproject.eyes_project_back.modules.user.domain.models.AuthToken;
 import br.com.eyesproject.eyes_project_back.modules.user.domain.models.TokenType;
 import br.com.eyesproject.eyes_project_back.modules.user.domain.models.User;
+import br.com.eyesproject.eyes_project_back.modules.user.domain.models.UserRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -31,6 +32,7 @@ public class CreateUserUseCaseImpl implements CreateUserUseCase {
         // Domain preparation: no password yet, inactive until setup.
         userParam.setActive(false);
         userParam.setPassword(null);
+        userParam.setRole(UserRole.STUDENT);
 
         User savedUser = userRepository.save(userParam);
 
