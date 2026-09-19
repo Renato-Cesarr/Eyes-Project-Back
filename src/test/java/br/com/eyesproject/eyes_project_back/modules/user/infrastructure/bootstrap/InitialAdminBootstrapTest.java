@@ -83,12 +83,49 @@ class InitialAdminBootstrapTest {
     }
 
     @Test
-    void refusesEnabledBootstrapWithoutSecureConfiguration() {
-        InitialAdminProperties invalid = new InitialAdminProperties(true, "", "invalid", "short");
+    void promotesActiveUserWithoutReplacingExistingPassword() {
+        InitialAdminBootstrap bootstrap = bootstrap(validProperties());
+        User activeUser = UserFactory.createValidUser();
+        activeUser.setEmail("admin@example.com");
+        String currentPassword = activeUser.getPassword();
+        when(userRepository.existsByRole(UserRole.ADMIN)).thenReturn(false);
+        when(userRepository.findByEmail("admin@example.com")).thenReturn(Optional.of(activeUser));
+
+        bootstrap.run(arguments);
+
+        assertEquals(UserRole.ADMIN, activeUser.getRole());
+        assertEquals(currentPassword, activeUser.getPassword());
+        assertTrue(activeUser.getActive());
+        verify(passwordEncoder, never()).encode(any());
+        verify(userRepository).save(activeUser);
+    }
+
+    @Test
+    void refusesEnabledBootstrapWhenARequiredValueIsMissing() {
+        InitialAdminProperties invalid = new InitialAdminProperties(true, "", "admin@example.com", "safe-password");
         InitialAdminBootstrap bootstrap = bootstrap(invalid);
 
         assertThrows(IllegalStateException.class, () -> bootstrap.run(arguments));
         verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void refusesEnabledBootstrapWithInvalidEmail() {
+        InitialAdminProperties invalid = new InitialAdminProperties(true, "Administrator", "invalid", "safe-password");
+        InitialAdminBootstrap bootstrap = bootstrap(invalid);
+
+        assertThrows(IllegalStateException.class, () -> bootstrap.run(arguments));
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void refusesEnabledBootstrapWithShortPassword() {
+        InitialAdminProperties invalid = new InitialAdminProperties(true, "Administrator", "admin@example.com", "short");
+        InitialAdminBootstrap bootstrap = bootstrap(invalid);
+
+        assertThrows(IllegalStateException.class, () -> bootstrap.run(arguments));
+        verify(userRepository, never()).save(any());
+        verify(userRepository, never()).existsByRole(any());
     }
 
     private InitialAdminBootstrap bootstrap(InitialAdminProperties properties) {
