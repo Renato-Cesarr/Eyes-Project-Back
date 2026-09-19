@@ -1,0 +1,15 @@
+ALTER TABLE tb_users
+    ADD COLUMN role CHARACTER VARYING(20);
+
+UPDATE tb_users
+SET role = 'STUDENT'
+WHERE role IS NULL;
+
+ALTER TABLE tb_users
+    ALTER COLUMN role SET DEFAULT 'STUDENT';
+
+ALTER TABLE tb_users
+    ALTER COLUMN role SET NOT NULL;
+
+ALTER TABLE tb_users
+    ADD CONSTRAINT ck_tb_users_role CHECK (role IN ('ADMIN', 'STUDENT'));

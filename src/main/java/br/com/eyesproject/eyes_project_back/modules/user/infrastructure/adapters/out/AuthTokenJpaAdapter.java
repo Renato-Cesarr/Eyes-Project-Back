@@ -58,6 +58,7 @@ public class AuthTokenJpaAdapter implements AuthTokenRepository {
                 .id(entity.getUser().getId().toString())
                 .name(entity.getUser().getName())
                 .email(entity.getUser().getEmail())
+                .role(entity.getUser().getRole())
                 .build();
 
         return AuthToken.builder()

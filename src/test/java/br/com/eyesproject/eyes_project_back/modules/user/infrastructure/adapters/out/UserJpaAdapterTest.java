@@ -38,6 +38,7 @@ class UserJpaAdapterTest {
                 .email(domainUser.getEmail())
                 .password(domainUser.getPassword())
                 .active(domainUser.getActive())
+                .role(domainUser.getRole())
                 .createdAt(domainUser.getCreatedAt())
                 .updatedAt(domainUser.getUpdatedAt())
                 .build();
@@ -55,6 +56,7 @@ class UserJpaAdapterTest {
         // Assert
         assertNotNull(result);
         assertEquals(domainUser.getEmail(), result.getEmail());
+        assertEquals(domainUser.getRole(), result.getRole());
         verify(springDataUserRepository, times(1)).save(any(UserJpaEntity.class));
     }
 
@@ -70,6 +72,7 @@ class UserJpaAdapterTest {
         // Assert
         assertTrue(result.isPresent());
         assertEquals(domainUser.getEmail(), result.get().getEmail());
+        assertEquals(domainUser.getRole(), result.get().getRole());
         verify(springDataUserRepository, times(1)).findByEmail(domainUser.getEmail());
     }
 
@@ -84,5 +87,14 @@ class UserJpaAdapterTest {
 
         // Assert
         assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("Should check whether a user role exists")
+    void shouldCheckWhetherRoleExists() {
+        when(springDataUserRepository.existsByRole(domainUser.getRole())).thenReturn(true);
+
+        assertTrue(userJpaAdapter.existsByRole(domainUser.getRole()));
+        verify(springDataUserRepository).existsByRole(domainUser.getRole());
     }
 }
