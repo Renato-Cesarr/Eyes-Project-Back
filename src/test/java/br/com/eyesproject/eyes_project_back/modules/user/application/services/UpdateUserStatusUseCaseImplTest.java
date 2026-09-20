@@ -58,6 +58,29 @@ class UpdateUserStatusUseCaseImplTest {
     }
 
     @Test
+    void shouldReturnImmediatelyWhenStatusIsAlreadyCorrect() {
+        User activeStudent = user(UserRole.STUDENT, true, "hash");
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(activeStudent));
+
+        var result = useCase.execute(USER_ID, true);
+
+        assertTrue(result.active());
+        verify(userRepository, never()).findByIdForUpdate(anyString());
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void shouldDeactivateAdminWhenAnotherActiveAdminExists() {
+        User admin = user(UserRole.ADMIN, true, "hash");
+        when(userRepository.findById(USER_ID)).thenReturn(Optional.of(admin));
+        when(userRepository.countActiveByRoleForUpdate(UserRole.ADMIN)).thenReturn(2L);
+        when(userRepository.findByIdForUpdate(USER_ID)).thenReturn(Optional.of(admin));
+        when(userRepository.save(admin)).thenReturn(admin);
+
+        assertFalse(useCase.execute(USER_ID, false).active());
+    }
+
+    @Test
     void shouldReturnNotFound() {
         when(userRepository.findById(USER_ID)).thenReturn(Optional.empty());
         assertThrows(ResourceNotFoundException.class, () -> useCase.execute(USER_ID, false));
