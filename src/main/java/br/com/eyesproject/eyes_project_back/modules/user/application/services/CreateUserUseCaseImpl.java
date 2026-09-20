@@ -1,32 +1,26 @@
 package br.com.eyesproject.eyes_project_back.modules.user.application.services;
 
-import br.com.eyesproject.eyes_project_back.global.exceptions.DomainException;
+import br.com.eyesproject.eyes_project_back.global.exceptions.ConflictException;
 import br.com.eyesproject.eyes_project_back.modules.user.application.ports.in.CreateUserUseCase;
-import br.com.eyesproject.eyes_project_back.modules.user.application.ports.out.AuthTokenRepository;
-import br.com.eyesproject.eyes_project_back.modules.user.application.ports.out.EmailSenderPort;
 import br.com.eyesproject.eyes_project_back.modules.user.application.ports.out.UserRepository;
-import br.com.eyesproject.eyes_project_back.modules.user.domain.models.AuthToken;
-import br.com.eyesproject.eyes_project_back.modules.user.domain.models.TokenType;
 import br.com.eyesproject.eyes_project_back.modules.user.domain.models.User;
 import br.com.eyesproject.eyes_project_back.modules.user.domain.models.UserRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
-import java.util.UUID;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class CreateUserUseCaseImpl implements CreateUserUseCase {
 
     private final UserRepository userRepository;
-    private final AuthTokenRepository authTokenRepository;
-    private final EmailSenderPort emailSenderPort;
+    private final InvitationIssuer invitationIssuer;
 
     @Override
+    @Transactional
     public User execute(User userParam) {
         if (userRepository.findByEmail(userParam.getEmail()).isPresent()) {
-            throw new DomainException("Este e-mail já está cadastrado no sistema");
+            throw new ConflictException("Este e-mail já está cadastrado no sistema");
         }
 
         // Domain preparation: no password yet, inactive until setup.
@@ -35,21 +29,7 @@ public class CreateUserUseCaseImpl implements CreateUserUseCase {
         userParam.setRole(UserRole.STUDENT);
 
         User savedUser = userRepository.save(userParam);
-
-        // Generate invitation token
-        String rawToken = UUID.randomUUID().toString();
-        
-        AuthToken setupToken = AuthToken.builder()
-                .user(savedUser)
-                .token(rawToken)
-                .type(TokenType.SETUP)
-                .expiresAt(LocalDateTime.now().plusHours(48)) // 48h to expire
-                .build();
-                
-        authTokenRepository.save(setupToken);
-
-        // Send Email
-        emailSenderPort.sendInvitationEmail(savedUser.getEmail(), savedUser.getName(), rawToken);
+        invitationIssuer.issue(savedUser);
 
         return savedUser;
     }
