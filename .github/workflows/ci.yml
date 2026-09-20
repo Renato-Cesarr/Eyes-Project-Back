@@ -44,8 +44,8 @@ jobs:
         shell: pwsh
         run: ./scripts/check-toolchain.ps1
 
-      - name: Validar migrações e RBAC no PostgreSQL
-        run: ./mvnw -Dtest=UserRolePostgresIntegrationTest test -Dspring.profiles.active=postgres-it
+      - name: Validar migrações e fluxos de segurança no PostgreSQL
+        run: ./mvnw -Dtest='*PostgresIntegrationTest' test -Dspring.profiles.active=postgres-it
         env:
           RUN_POSTGRES_IT: true
           DB_HOST: localhost

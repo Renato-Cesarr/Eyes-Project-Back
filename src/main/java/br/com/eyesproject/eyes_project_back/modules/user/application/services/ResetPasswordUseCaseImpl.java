@@ -10,23 +10,26 @@ import br.com.eyesproject.eyes_project_back.modules.user.domain.models.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class ResetPasswordUseCaseImpl implements ResetPasswordUseCase {
+
+    private static final String INVALID_TOKEN_MESSAGE = "Link de redefinição inválido ou expirado";
 
     private final AuthTokenRepository authTokenRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
+    @Transactional
     public void execute(String tokenParam, String newPassword) {
-        AuthToken resetToken = authTokenRepository.findByTokenAndType(tokenParam, TokenType.RESET)
-                .orElseThrow(() -> new DomainException("Link de redefinição inválido ou expirado"));
+        AuthToken resetToken = authTokenRepository.findByTokenAndTypeForUpdate(tokenParam, TokenType.RESET)
+                .orElseThrow(() -> new DomainException(INVALID_TOKEN_MESSAGE));
 
         if (resetToken.isExpired()) {
-            authTokenRepository.deleteById(resetToken.getId());
-            throw new DomainException("O link expirou. Solicite uma nova redefinição de senha.");
+            throw new DomainException(INVALID_TOKEN_MESSAGE);
         }
 
         User user = resetToken.getUser();
@@ -36,7 +39,7 @@ public class ResetPasswordUseCaseImpl implements ResetPasswordUseCase {
         
         userRepository.save(user);
 
-        // Cleanup the token
+        // Consumed in the same transaction as the password change.
         authTokenRepository.deleteById(resetToken.getId());
     }
 }

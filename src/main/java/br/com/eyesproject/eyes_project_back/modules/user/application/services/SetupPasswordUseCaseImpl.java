@@ -10,25 +10,26 @@ import br.com.eyesproject.eyes_project_back.modules.user.domain.models.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class SetupPasswordUseCaseImpl implements SetupPasswordUseCase {
+
+    private static final String INVALID_TOKEN_MESSAGE = "Link de ativação inválido ou expirado";
 
     private final AuthTokenRepository authTokenRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Override
+    @Transactional
     public void execute(String tokenParam, String newPassword) {
-        AuthToken setupToken = authTokenRepository.findByTokenAndType(tokenParam, TokenType.SETUP)
-                .orElseThrow(() -> new DomainException("Link de ativação inválido ou expirado"));
+        AuthToken setupToken = authTokenRepository.findByTokenAndTypeForUpdate(tokenParam, TokenType.SETUP)
+                .orElseThrow(() -> new DomainException(INVALID_TOKEN_MESSAGE));
 
         if (setupToken.isExpired()) {
-            authTokenRepository.deleteById(setupToken.getId());
-            throw new DomainException("O link de convite expirou. Solicite um novo acesso.");
+            throw new DomainException(INVALID_TOKEN_MESSAGE);
         }
 
         User user = setupToken.getUser();
@@ -40,7 +41,7 @@ public class SetupPasswordUseCaseImpl implements SetupPasswordUseCase {
         
         userRepository.save(user);
 
-        // Cleanup the token
+        // Consumed in the same transaction as the account activation.
         authTokenRepository.deleteById(setupToken.getId());
     }
 }
