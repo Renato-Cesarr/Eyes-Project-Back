@@ -85,6 +85,33 @@ inativos, removidos ou sem papel válido não são autenticados.
   mensagem neutra, sem revelar seu estado;
 - o valor do token não deve aparecer em logs, métricas ou mensagens de erro.
 
+### Gestão administrativa de usuários
+
+Todas as rotas abaixo exigem JWT de um usuário `ADMIN`:
+
+| Método | Rota | Finalidade |
+| --- | --- | --- |
+| `GET` | `/api/v1/users` | Lista usuários com paginação e filtros |
+| `GET` | `/api/v1/users/{id}` | Consulta um usuário sem campos sensíveis |
+| `PATCH` | `/api/v1/users/{id}/status` | Ativa ou desativa uma conta |
+| `POST` | `/api/v1/users/{id}/resend-invitation` | Substitui e reenvia um convite pendente |
+
+A listagem aceita `page`, `size` (máximo de 100), `search`, `role`, `active`,
+`sortBy` (`NAME`, `EMAIL` ou `CREATED_AT`) e `direction` (`ASC` ou `DESC`).
+O campo `search` procura por nome ou e-mail sem diferenciar maiúsculas e
+minúsculas.
+
+Contas são desativadas logicamente, sem exclusão física. O último
+administrador ativo nunca pode ser desativado; essa invariável é protegida por
+bloqueio pessimista no PostgreSQL, inclusive sob requisições concorrentes. Uma
+conta convidada sem senha só pode ser ativada pelo link de convite. O reenvio
+invalida qualquer token `SETUP` anterior e gera um novo token com 48 horas de
+validade.
+
+As respostas administrativas expõem apenas `id`, nome, e-mail, papel, status,
+estado do convite e datas de auditoria. Hashes de senha e tokens nunca fazem
+parte dos DTOs da API.
+
 O contrato executável está disponível em `/v3/api-docs` e na interface
 `/swagger-ui.html`. Rotas protegidas usam o esquema OpenAPI `bearerAuth`.
 
