@@ -2,9 +2,6 @@ package br.com.eyesproject.eyes_project_back.modules.accessrequest.application.p
 
 import br.com.eyesproject.eyes_project_back.modules.accessrequest.domain.models.AccessRequest;
 
-/**
- * Input port (Use Case) that the Presentation layer will invoke.
- */
-public interface CreateAccessRequestUseCase {
-    AccessRequest execute(AccessRequest request);
+public interface RejectAccessRequestUseCase {
+    AccessRequest execute(String requestId, String administratorId, String reason);
 }

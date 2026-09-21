@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Locale;
+
 @Service
 @RequiredArgsConstructor
 public class CreateUserUseCaseImpl implements CreateUserUseCase {
@@ -19,6 +21,9 @@ public class CreateUserUseCaseImpl implements CreateUserUseCase {
     @Override
     @Transactional
     public User execute(User userParam) {
+        userParam.setName(userParam.getName().trim().replaceAll("\\s+", " "));
+        userParam.setEmail(userParam.getEmail().trim().toLowerCase(Locale.ROOT));
+
         if (userRepository.findByEmail(userParam.getEmail()).isPresent()) {
             throw new ConflictException("Este e-mail já está cadastrado no sistema");
         }

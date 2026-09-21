@@ -16,7 +16,7 @@ import java.util.UUID;
 
 @Repository
 public interface SpringDataUserRepository extends JpaRepository<UserJpaEntity, UUID>, JpaSpecificationExecutor<UserJpaEntity> {
-    Optional<UserJpaEntity> findByEmail(String email);
+    Optional<UserJpaEntity> findByEmailIgnoreCase(String email);
     boolean existsByRole(UserRole role);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

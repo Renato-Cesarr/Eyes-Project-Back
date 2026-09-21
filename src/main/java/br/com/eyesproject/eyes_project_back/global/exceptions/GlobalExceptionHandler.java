@@ -2,6 +2,7 @@ package br.com.eyesproject.eyes_project_back.global.exceptions;
 
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -21,6 +22,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<ErrorResponse> handleConflict(ConflictException ex, HttpServletRequest request) {
         return buildError(HttpStatus.CONFLICT, ex.getMessage(), request);
+    }
+
+    @ExceptionHandler(TooManyRequestsException.class)
+    public ResponseEntity<ErrorResponse> handleTooManyRequests(
+            TooManyRequestsException ex,
+            HttpServletRequest request
+    ) {
+        return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                .header(HttpHeaders.RETRY_AFTER, Long.toString(ex.getRetryAfterSeconds()))
+                .body(error(HttpStatus.TOO_MANY_REQUESTS, ex.getMessage(), request));
     }
 
     @ExceptionHandler(RuntimeException.class)
@@ -49,13 +60,16 @@ public class GlobalExceptionHandler {
     }
 
     private ResponseEntity<ErrorResponse> buildError(HttpStatus status, String message, HttpServletRequest request) {
-        ErrorResponse error = ErrorResponse.builder()
+        return new ResponseEntity<>(error(status, message, request), status);
+    }
+
+    private ErrorResponse error(HttpStatus status, String message, HttpServletRequest request) {
+        return ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(status.value())
                 .error(status.getReasonPhrase())
                 .message(message)
                 .path(request.getRequestURI())
                 .build();
-        return new ResponseEntity<>(error, status);
     }
 }
