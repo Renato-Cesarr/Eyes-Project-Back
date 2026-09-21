@@ -67,8 +67,9 @@ inativos, removidos ou sem papel válido não são autenticados.
 
 - rotas de autenticação por `POST` permanecem públicas;
 - a definição da senha de convite permanece pública;
-- `/api/v1/users/**`, `/api/v1/audit/**` e `/api/v1/access-requests/**` exigem
-  `ADMIN`;
+- `POST /api/v1/access-requests` é público e protegido por limite de requisições;
+- as demais rotas de `/api/v1/access-requests/**`, além de `/api/v1/users/**` e
+  `/api/v1/audit/**`, exigem `ADMIN`;
 - uma requisição anônima recebe `401` e um usuário autenticado sem o papel
   necessário recebe `403`.
 
@@ -114,6 +115,35 @@ parte dos DTOs da API.
 
 O contrato executável está disponível em `/v3/api-docs` e na interface
 `/swagger-ui.html`. Rotas protegidas usam o esquema OpenAPI `bearerAuth`.
+
+### Solicitações de acesso
+
+O cadastro público não cria uma conta diretamente. Ele registra uma solicitação
+pendente para análise administrativa:
+
+| Método | Rota | Acesso | Finalidade |
+| --- | --- | --- | --- |
+| `POST` | `/api/v1/access-requests` | Público | Envia uma solicitação |
+| `GET` | `/api/v1/access-requests` | `ADMIN` | Lista e filtra solicitações |
+| `POST` | `/api/v1/access-requests/{id}/approve` | `ADMIN` | Aprova e emite o convite |
+| `POST` | `/api/v1/access-requests/{id}/reject` | `ADMIN` | Rejeita com justificativa |
+
+Nome e e-mail são normalizados antes da persistência. Submissões repetidas para
+o mesmo e-mail enquanto existe uma solicitação pendente são idempotentes e
+recebem a mesma resposta neutra `202 Accepted`, sem expor dados pessoais. Um
+e-mail que já possui conta recebe conflito genérico e não cria solicitação.
+
+A aprovação é transacional: bloqueia a solicitação, cria o usuário `STUDENT`,
+emite o convite de definição de senha e grava a auditoria uma única vez. A
+rejeição exige justificativa e também é auditada. Decisões finais não podem ser
+invertidas; repetir a mesma decisão é seguro e não produz efeitos duplicados.
+
+O endpoint público aplica um limite fixo por endereço IP. Os valores padrão são
+cinco tentativas a cada 15 minutos e podem ser ajustados por
+`ACCESS_REQUEST_RATE_LIMIT_MAX` e
+`ACCESS_REQUEST_RATE_LIMIT_WINDOW_SECONDS`. O cabeçalho `X-Forwarded-For` só
+deve ser considerado após configurar um proxy reverso confiável; por padrão a
+aplicação usa o endereço remoto observado pelo servidor.
 
 ## Fluxo Git
 
