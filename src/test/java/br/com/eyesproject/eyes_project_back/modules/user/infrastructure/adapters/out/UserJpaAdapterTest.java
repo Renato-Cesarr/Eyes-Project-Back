@@ -70,7 +70,7 @@ class UserJpaAdapterTest {
     @DisplayName("Should find user by email and map to domain")
     void shouldFindUserByEmail() {
         // Arrange
-        when(springDataUserRepository.findByEmail(domainUser.getEmail())).thenReturn(Optional.of(userEntity));
+        when(springDataUserRepository.findByEmailIgnoreCase(domainUser.getEmail())).thenReturn(Optional.of(userEntity));
 
         // Act
         Optional<User> result = userJpaAdapter.findByEmail(domainUser.getEmail());
@@ -79,14 +79,14 @@ class UserJpaAdapterTest {
         assertTrue(result.isPresent());
         assertEquals(domainUser.getEmail(), result.get().getEmail());
         assertEquals(domainUser.getRole(), result.get().getRole());
-        verify(springDataUserRepository, times(1)).findByEmail(domainUser.getEmail());
+        verify(springDataUserRepository, times(1)).findByEmailIgnoreCase(domainUser.getEmail());
     }
 
     @Test
     @DisplayName("Should return empty Optional when user not found by email")
     void shouldReturnEmptyWhenUserNotFoundByEmail() {
         // Arrange
-        when(springDataUserRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+        when(springDataUserRepository.findByEmailIgnoreCase(anyString())).thenReturn(Optional.empty());
 
         // Act
         Optional<User> result = userJpaAdapter.findByEmail("notfound@test.com");

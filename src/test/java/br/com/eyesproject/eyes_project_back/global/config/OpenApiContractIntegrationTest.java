@@ -47,6 +47,11 @@ class OpenApiContractIntegrationTest {
                 .andExpect(jsonPath("$.paths['/api/v1/users/setup-password'].post.responses['400']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/users/setup-password'].post.responses['422']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/auth/forgot-password'].post.responses['200']").exists())
-                .andExpect(jsonPath("$.paths['/api/v1/auth/reset-password'].post.responses['400']").exists());
+                .andExpect(jsonPath("$.paths['/api/v1/auth/reset-password'].post.responses['400']").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/access-requests'].post.security").doesNotExist())
+                .andExpect(jsonPath("$.paths['/api/v1/access-requests'].post.responses['202']").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/access-requests'].get.security[0].bearerAuth").isArray())
+                .andExpect(jsonPath("$.paths['/api/v1/access-requests/{id}/approve'].post.security[0].bearerAuth").isArray())
+                .andExpect(jsonPath("$.paths['/api/v1/access-requests/{id}/reject'].post.security[0].bearerAuth").isArray());
     }
 }
