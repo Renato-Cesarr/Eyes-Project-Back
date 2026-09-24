@@ -2,6 +2,8 @@ package br.com.eyesproject.eyes_project_back.modules.user.application.services;
 
 import br.com.eyesproject.eyes_project_back.global.exceptions.ConflictException;
 import br.com.eyesproject.eyes_project_back.global.exceptions.ResourceNotFoundException;
+import br.com.eyesproject.eyes_project_back.modules.audit.application.services.AdministrativeAudit;
+import br.com.eyesproject.eyes_project_back.modules.audit.domain.models.AuditAction;
 import br.com.eyesproject.eyes_project_back.modules.user.application.ports.out.UserRepository;
 import br.com.eyesproject.eyes_project_back.modules.user.domain.models.User;
 import br.com.eyesproject.eyes_project_back.modules.user.domain.models.UserRole;
@@ -22,6 +24,7 @@ class UpdateUserStatusUseCaseImplTest {
     private static final String USER_ID = "bf4b6797-750d-4f5d-8277-11c9099a428c";
 
     @Mock UserRepository userRepository;
+    @Mock AdministrativeAudit administrativeAudit;
     @InjectMocks UpdateUserStatusUseCaseImpl useCase;
 
     @Test
@@ -35,6 +38,9 @@ class UpdateUserStatusUseCaseImplTest {
 
         assertFalse(result.active());
         verify(userRepository).save(student);
+        verify(administrativeAudit).success(
+                eq(AuditAction.USER_DEACTIVATED), isNull(), eq("USER"), eq(USER_ID), anyMap()
+        );
     }
 
     @Test
@@ -45,6 +51,9 @@ class UpdateUserStatusUseCaseImplTest {
 
         assertThrows(ConflictException.class, () -> useCase.execute(USER_ID, false));
         verify(userRepository, never()).save(any());
+        verify(administrativeAudit).failure(
+                eq(AuditAction.USER_DEACTIVATED), isNull(), eq("USER"), eq(USER_ID), any(ConflictException.class)
+        );
     }
 
     @Test

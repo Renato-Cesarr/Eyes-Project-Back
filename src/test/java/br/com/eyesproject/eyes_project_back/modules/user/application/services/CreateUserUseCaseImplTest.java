@@ -1,6 +1,8 @@
 package br.com.eyesproject.eyes_project_back.modules.user.application.services;
 
 import br.com.eyesproject.eyes_project_back.global.exceptions.ConflictException;
+import br.com.eyesproject.eyes_project_back.modules.audit.application.services.AdministrativeAudit;
+import br.com.eyesproject.eyes_project_back.modules.audit.domain.models.AuditAction;
 import br.com.eyesproject.eyes_project_back.modules.user.application.ports.out.UserRepository;
 import br.com.eyesproject.eyes_project_back.modules.user.domain.models.User;
 import br.com.eyesproject.eyes_project_back.modules.user.domain.models.UserRole;
@@ -28,6 +30,9 @@ class CreateUserUseCaseImplTest {
 
     @Mock
     private InvitationIssuer invitationIssuer;
+
+    @Mock
+    private AdministrativeAudit administrativeAudit;
 
     @InjectMocks
     private CreateUserUseCaseImpl createUserUseCase;
@@ -59,6 +64,9 @@ class CreateUserUseCaseImplTest {
         assertEquals(requestUser.getEmail(), savedUserArg.getEmail());
 
         verify(invitationIssuer).issue(savedUserArg);
+        verify(administrativeAudit).success(
+                eq(AuditAction.USER_INVITED), isNull(), eq("USER"), any(), anyMap()
+        );
 
         assertNotNull(createdUser);
     }
@@ -77,5 +85,8 @@ class CreateUserUseCaseImplTest {
 
         verify(userRepository, never()).save(any(User.class));
         verifyNoInteractions(invitationIssuer);
+        verify(administrativeAudit).failure(
+                eq(AuditAction.USER_INVITED), isNull(), eq("USER"), isNull(), any(ConflictException.class)
+        );
     }
 }
