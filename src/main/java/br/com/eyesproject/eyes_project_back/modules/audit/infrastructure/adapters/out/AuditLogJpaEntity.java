@@ -1,6 +1,7 @@
 package br.com.eyesproject.eyes_project_back.modules.audit.infrastructure.adapters.out;
 
 import br.com.eyesproject.eyes_project_back.modules.audit.domain.models.AuditAction;
+import br.com.eyesproject.eyes_project_back.modules.audit.domain.models.AuditResult;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -43,6 +44,16 @@ public class AuditLogJpaEntity {
 
     @Column(name = "target_id", nullable = false, length = 100)
     private String targetId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
+    private AuditResult result;
+
+    @Column(name = "correlation_id", nullable = false, length = 64)
+    private String correlationId;
+
+    @Column(name = "metadata_json", nullable = false, columnDefinition = "TEXT")
+    private String metadataJson;
 
     @Column(name = "occurred_at", nullable = false, updatable = false)
     private LocalDateTime occurredAt;

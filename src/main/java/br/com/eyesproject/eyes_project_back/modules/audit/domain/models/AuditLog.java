@@ -6,6 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import java.time.LocalDateTime;
+import java.util.Map;
 
 /**
  * Pure domain entity representing an Audit Log.
@@ -22,5 +23,9 @@ public class AuditLog {
     private String actorUserId;
     private String targetType;
     private String targetId;
+    private AuditResult result;
+    private String correlationId;
+    @Builder.Default
+    private Map<String, String> metadata = Map.of();
     private LocalDateTime timestamp;
 }
