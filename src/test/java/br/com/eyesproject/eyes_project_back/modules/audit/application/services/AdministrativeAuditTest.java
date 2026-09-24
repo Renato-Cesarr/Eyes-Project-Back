@@ -1,6 +1,8 @@
 package br.com.eyesproject.eyes_project_back.modules.audit.application.services;
 
 import br.com.eyesproject.eyes_project_back.global.exceptions.ConflictException;
+import br.com.eyesproject.eyes_project_back.global.exceptions.DomainException;
+import br.com.eyesproject.eyes_project_back.global.exceptions.ResourceNotFoundException;
 import br.com.eyesproject.eyes_project_back.modules.audit.application.ports.in.LogActionUseCase;
 import br.com.eyesproject.eyes_project_back.modules.audit.application.ports.out.AuditContextProvider;
 import br.com.eyesproject.eyes_project_back.modules.audit.domain.models.AuditAction;
@@ -12,11 +14,13 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionSynchronization;
 
 import java.util.Map;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.mockito.ArgumentMatchers.any;
@@ -110,13 +114,51 @@ class AdministrativeAuditTest {
             verifyNoInteractions(logActionUseCase);
 
             TransactionSynchronizationManager.getSynchronizations()
-                    .forEach(synchronization -> synchronization.afterCommit());
+                    .forEach(TransactionSynchronization::afterCommit);
 
             verify(logActionUseCase).execute(any());
         } finally {
             TransactionSynchronizationManager.setActualTransactionActive(false);
             TransactionSynchronizationManager.clearSynchronization();
         }
+    }
+
+    @Test
+    void doesNotReportACommittedOperationAsFailedWhenAuditStorageIsUnavailable() {
+        doThrow(new RuntimeException("audit unavailable")).when(logActionUseCase).execute(any());
+        AdministrativeAudit audit = audit();
+        TransactionSynchronizationManager.initSynchronization();
+        TransactionSynchronizationManager.setActualTransactionActive(true);
+        try {
+            audit.success(AuditAction.USER_INVITED, "actor", "USER", "user", Map.of());
+
+            assertDoesNotThrow(() -> TransactionSynchronizationManager.getSynchronizations()
+                    .forEach(TransactionSynchronization::afterCommit));
+        } finally {
+            TransactionSynchronizationManager.setActualTransactionActive(false);
+            TransactionSynchronizationManager.clearSynchronization();
+        }
+    }
+
+    @Test
+    void classifiesNotFoundValidationAndTechnicalFailures() {
+        AdministrativeAudit audit = audit();
+        ArgumentCaptor<AuditLog> captor = ArgumentCaptor.forClass(AuditLog.class);
+
+        audit.failure(AuditAction.USER_INVITED, "actor", "USER", "one",
+                new ResourceNotFoundException("not found"));
+        audit.failure(AuditAction.USER_INVITED, "actor", "USER", "two",
+                new DomainException("invalid"));
+        audit.failure(AuditAction.USER_INVITED, "actor", "USER", "three",
+                new IllegalStateException("technical"));
+
+        verify(logActionUseCase, org.mockito.Mockito.times(3)).execute(captor.capture());
+        assertEquals(
+                java.util.List.of("NOT_FOUND", "DOMAIN_VALIDATION", "TECHNICAL_FAILURE"),
+                captor.getAllValues().stream()
+                        .map(event -> event.getMetadata().get("failureCategory"))
+                        .toList()
+        );
     }
 
     private AdministrativeAudit audit() {

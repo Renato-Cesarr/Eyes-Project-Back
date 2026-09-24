@@ -36,14 +36,16 @@ class AuditQueryTest {
                 () -> new AuditQuery(0, 101, null, null, null, null, null));
         assertThrows(DomainException.class,
                 () -> new AuditQuery(0, 20, "invalid-actor", null, null, null, null));
+        LocalDateTime invertedStart = LocalDateTime.of(2026, 10, 1, 0, 0);
+        LocalDateTime invertedEnd = LocalDateTime.of(2026, 9, 1, 0, 0);
         assertThrows(DomainException.class, () -> new AuditQuery(
                 0,
                 20,
                 null,
                 null,
                 null,
-                LocalDateTime.of(2026, 10, 1, 0, 0),
-                LocalDateTime.of(2026, 9, 1, 0, 0)
+                invertedStart,
+                invertedEnd
         ));
     }
 }

@@ -24,6 +24,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AuditLogJpaAdapter implements AuditLogRepository {
 
+    private static final String OCCURRED_AT_FIELD = "occurredAt";
     private final SpringDataAuditLogRepository springDataRepository;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
@@ -60,16 +61,16 @@ public class AuditLogJpaAdapter implements AuditLogRepository {
         }
         if (query.occurredFrom() != null) {
             specification = specification.and((root, ignored, builder) ->
-                    builder.greaterThanOrEqualTo(root.get("occurredAt"), query.occurredFrom()));
+                    builder.greaterThanOrEqualTo(root.get(OCCURRED_AT_FIELD), query.occurredFrom()));
         }
         if (query.occurredTo() != null) {
             specification = specification.and((root, ignored, builder) ->
-                    builder.lessThanOrEqualTo(root.get("occurredAt"), query.occurredTo()));
+                    builder.lessThanOrEqualTo(root.get(OCCURRED_AT_FIELD), query.occurredTo()));
         }
 
         var result = springDataRepository.findAll(
                 specification,
-                PageRequest.of(query.page(), query.size(), Sort.by(Sort.Direction.DESC, "occurredAt"))
+                PageRequest.of(query.page(), query.size(), Sort.by(Sort.Direction.DESC, OCCURRED_AT_FIELD))
         );
         return new AuditPage(
                 result.getContent().stream().map(this::mapToDomain).toList(),

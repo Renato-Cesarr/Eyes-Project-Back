@@ -24,6 +24,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class DecideAccessRequestService implements ApproveAccessRequestUseCase, RejectAccessRequestUseCase {
 
+    private static final String ACCESS_REQUEST_TARGET = "ACCESS_REQUEST";
     private final AccessRequestRepository accessRequestRepository;
     private final CreateUserUseCase createUserUseCase;
     private final AdministrativeAudit administrativeAudit;
@@ -49,7 +50,7 @@ public class DecideAccessRequestService implements ApproveAccessRequestUseCase, 
             administrativeAudit.success(
                     AuditAction.ACCESS_REQUEST_APPROVED,
                     administratorId,
-                    "ACCESS_REQUEST",
+                    ACCESS_REQUEST_TARGET,
                     saved.getId(),
                     Map.of("decision", "APPROVED")
             );
@@ -58,7 +59,7 @@ public class DecideAccessRequestService implements ApproveAccessRequestUseCase, 
             administrativeAudit.failure(
                     AuditAction.ACCESS_REQUEST_APPROVED,
                     administratorId,
-                    "ACCESS_REQUEST",
+                    ACCESS_REQUEST_TARGET,
                     requestId,
                     failure
             );
@@ -90,7 +91,7 @@ public class DecideAccessRequestService implements ApproveAccessRequestUseCase, 
             administrativeAudit.success(
                     AuditAction.ACCESS_REQUEST_REJECTED,
                     administratorId,
-                    "ACCESS_REQUEST",
+                    ACCESS_REQUEST_TARGET,
                     saved.getId(),
                     Map.of("decision", "REJECTED", "reasonProvided", "true")
             );
@@ -99,7 +100,7 @@ public class DecideAccessRequestService implements ApproveAccessRequestUseCase, 
             administrativeAudit.failure(
                     AuditAction.ACCESS_REQUEST_REJECTED,
                     administratorId,
-                    "ACCESS_REQUEST",
+                    ACCESS_REQUEST_TARGET,
                     requestId,
                     failure
             );

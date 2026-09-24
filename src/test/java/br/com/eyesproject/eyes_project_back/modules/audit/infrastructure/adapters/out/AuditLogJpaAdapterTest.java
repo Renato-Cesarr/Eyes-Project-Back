@@ -20,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.ArgumentMatchers.any;
@@ -66,6 +67,27 @@ class AuditLogJpaAdapterTest {
     }
 
     @Test
+    void letsTheDatabaseGenerateTheIdAndSerializesMissingMetadataAsEmpty() {
+        AuditLog log = AuditLog.builder()
+                .action(AuditAction.USER_INVITED)
+                .actorUserId(ACTOR_ID.toString())
+                .targetType("USER")
+                .targetId("user-id")
+                .result(AuditResult.SUCCESS)
+                .correlationId("request-new")
+                .metadata(null)
+                .timestamp(OCCURRED_AT)
+                .build();
+
+        adapter().save(log);
+
+        ArgumentCaptor<AuditLogJpaEntity> captor = ArgumentCaptor.forClass(AuditLogJpaEntity.class);
+        verify(springDataRepository).save(captor.capture());
+        assertNull(captor.getValue().getId());
+        assertEquals("{}", captor.getValue().getMetadataJson());
+    }
+
+    @Test
     void mapsStoredEventsBackToTheDomainInRepositoryOrder() {
         AuditLogJpaAdapter adapter = adapter();
         AuditLogJpaEntity entity = AuditLogJpaEntity.builder()
@@ -99,6 +121,28 @@ class AuditLogJpaAdapterTest {
         assertEquals("request-456", log.getCorrelationId());
         assertEquals(Map.of("failureCategory", "CONFLICT"), log.getMetadata());
         assertEquals(OCCURRED_AT, log.getTimestamp());
+    }
+
+    @Test
+    void mapsBlankStoredMetadataAsAnEmptyMap() {
+        AuditLogJpaEntity entity = AuditLogJpaEntity.builder()
+                .id(LOG_ID)
+                .action(AuditAction.USER_INVITED)
+                .actorUserId(ACTOR_ID)
+                .targetType("USER")
+                .targetId("user-id")
+                .result(AuditResult.SUCCESS)
+                .correlationId("request-blank")
+                .metadataJson(" ")
+                .occurredAt(OCCURRED_AT)
+                .build();
+        when(springDataRepository.findAll(any(Specification.class), any(Pageable.class)))
+                .thenReturn(new PageImpl<>(List.of(entity)));
+
+        AuditLog result = adapter().search(new AuditQuery(0, 20, null, null, null, null, null))
+                .content().getFirst();
+
+        assertEquals(Map.of(), result.getMetadata());
     }
 
     private AuditLogJpaAdapter adapter() {
