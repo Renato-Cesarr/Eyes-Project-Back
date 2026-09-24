@@ -2,6 +2,8 @@ package br.com.eyesproject.eyes_project_back.modules.user.application.services;
 
 import br.com.eyesproject.eyes_project_back.global.exceptions.ConflictException;
 import br.com.eyesproject.eyes_project_back.global.exceptions.ResourceNotFoundException;
+import br.com.eyesproject.eyes_project_back.modules.audit.application.services.AdministrativeAudit;
+import br.com.eyesproject.eyes_project_back.modules.audit.domain.models.AuditAction;
 import br.com.eyesproject.eyes_project_back.modules.user.application.ports.in.ResendInvitationUseCase;
 import br.com.eyesproject.eyes_project_back.modules.user.application.ports.out.UserRepository;
 import br.com.eyesproject.eyes_project_back.modules.user.domain.models.User;
@@ -15,17 +17,25 @@ public class ResendInvitationUseCaseImpl implements ResendInvitationUseCase {
 
     private final UserRepository userRepository;
     private final InvitationIssuer invitationIssuer;
+    private final AdministrativeAudit administrativeAudit;
 
     @Override
     @Transactional
     public void execute(String id) {
-        User user = userRepository.findByIdForUpdate(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
+        try {
+            User user = userRepository.findByIdForUpdate(id)
+                    .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
 
-        if (Boolean.TRUE.equals(user.getActive()) || user.getPassword() != null) {
-            throw new ConflictException("Somente convites pendentes podem ser reenviados");
+            if (Boolean.TRUE.equals(user.getActive()) || user.getPassword() != null) {
+                throw new ConflictException("Somente convites pendentes podem ser reenviados");
+            }
+
+            invitationIssuer.issue(user);
+        } catch (RuntimeException failure) {
+            administrativeAudit.failure(AuditAction.INVITATION_RESENT, null, "USER", id, failure);
+            throw failure;
         }
 
-        invitationIssuer.issue(user);
+        administrativeAudit.success(AuditAction.INVITATION_RESENT, null, "USER", id, null);
     }
 }

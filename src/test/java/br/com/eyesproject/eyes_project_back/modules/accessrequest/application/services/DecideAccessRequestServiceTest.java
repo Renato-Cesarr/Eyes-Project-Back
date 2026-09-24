@@ -6,15 +6,13 @@ import br.com.eyesproject.eyes_project_back.global.exceptions.ResourceNotFoundEx
 import br.com.eyesproject.eyes_project_back.modules.accessrequest.application.ports.out.AccessRequestRepository;
 import br.com.eyesproject.eyes_project_back.modules.accessrequest.domain.models.AccessRequest;
 import br.com.eyesproject.eyes_project_back.modules.accessrequest.domain.models.AccessRequestStatus;
-import br.com.eyesproject.eyes_project_back.modules.audit.application.ports.in.LogActionUseCase;
+import br.com.eyesproject.eyes_project_back.modules.audit.application.services.AdministrativeAudit;
 import br.com.eyesproject.eyes_project_back.modules.audit.domain.models.AuditAction;
-import br.com.eyesproject.eyes_project_back.modules.audit.domain.models.AuditLog;
 import br.com.eyesproject.eyes_project_back.modules.user.application.ports.in.CreateUserUseCase;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -27,6 +25,8 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyMap;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -39,7 +39,7 @@ class DecideAccessRequestServiceTest {
 
     @Mock AccessRequestRepository accessRequestRepository;
     @Mock CreateUserUseCase createUserUseCase;
-    @Mock LogActionUseCase logActionUseCase;
+    @Mock AdministrativeAudit administrativeAudit;
 
     private DecideAccessRequestService service;
 
@@ -48,7 +48,7 @@ class DecideAccessRequestServiceTest {
         service = new DecideAccessRequestService(
                 accessRequestRepository,
                 createUserUseCase,
-                logActionUseCase,
+                administrativeAudit,
                 Clock.fixed(NOW, ZoneOffset.UTC)
         );
     }
@@ -67,10 +67,13 @@ class DecideAccessRequestServiceTest {
         assertEquals("admin-id", result.getDecidedByUserId());
         assertEquals(LocalDateTime.ofInstant(NOW, ZoneOffset.UTC), result.getDecidedAt());
         verify(createUserUseCase).execute(any());
-        ArgumentCaptor<AuditLog> audit = ArgumentCaptor.forClass(AuditLog.class);
-        verify(logActionUseCase).execute(audit.capture());
-        assertEquals(AuditAction.ACCESS_REQUEST_APPROVED, audit.getValue().getAction());
-        assertEquals("request-id", audit.getValue().getTargetId());
+        verify(administrativeAudit).success(
+                eq(AuditAction.ACCESS_REQUEST_APPROVED),
+                eq("admin-id"),
+                eq("ACCESS_REQUEST"),
+                eq("request-id"),
+                anyMap()
+        );
     }
 
     @Test
@@ -83,7 +86,7 @@ class DecideAccessRequestServiceTest {
         AccessRequest result = service.execute("request-id", "second-admin");
 
         assertEquals("first-admin", result.getDecidedByUserId());
-        verifyNoInteractions(createUserUseCase, logActionUseCase);
+        verifyNoInteractions(createUserUseCase, administrativeAudit);
         verify(accessRequestRepository, never()).save(any());
     }
 
@@ -99,9 +102,13 @@ class DecideAccessRequestServiceTest {
 
         assertEquals(AccessRequestStatus.REJECTED, result.getStatus());
         assertEquals("Dados insuficientes", result.getDecisionReason());
-        ArgumentCaptor<AuditLog> audit = ArgumentCaptor.forClass(AuditLog.class);
-        verify(logActionUseCase).execute(audit.capture());
-        assertEquals(AuditAction.ACCESS_REQUEST_REJECTED, audit.getValue().getAction());
+        verify(administrativeAudit).success(
+                eq(AuditAction.ACCESS_REQUEST_REJECTED),
+                eq("admin-id"),
+                eq("ACCESS_REQUEST"),
+                eq("request-id"),
+                anyMap()
+        );
     }
 
     @Test
@@ -117,7 +124,13 @@ class DecideAccessRequestServiceTest {
 
         assertEquals("Justificativa é obrigatória", exception.getMessage());
         verify(accessRequestRepository, never()).save(any());
-        verifyNoInteractions(logActionUseCase);
+        verify(administrativeAudit).failure(
+                eq(AuditAction.ACCESS_REQUEST_REJECTED),
+                eq("admin-id"),
+                eq("ACCESS_REQUEST"),
+                eq("request-id"),
+                any(DomainException.class)
+        );
     }
 
     @Test
@@ -128,7 +141,14 @@ class DecideAccessRequestServiceTest {
         when(accessRequestRepository.findByIdForUpdate("request-id")).thenReturn(Optional.of(rejected));
 
         assertThrows(ConflictException.class, () -> service.execute("request-id", "admin-id"));
-        verifyNoInteractions(createUserUseCase, logActionUseCase);
+        verifyNoInteractions(createUserUseCase);
+        verify(administrativeAudit).failure(
+                eq(AuditAction.ACCESS_REQUEST_APPROVED),
+                eq("admin-id"),
+                eq("ACCESS_REQUEST"),
+                eq("request-id"),
+                any(ConflictException.class)
+        );
     }
 
     @Test

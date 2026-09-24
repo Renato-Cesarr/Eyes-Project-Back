@@ -2,6 +2,8 @@ package br.com.eyesproject.eyes_project_back.modules.user.application.services;
 
 import br.com.eyesproject.eyes_project_back.global.exceptions.ConflictException;
 import br.com.eyesproject.eyes_project_back.global.exceptions.ResourceNotFoundException;
+import br.com.eyesproject.eyes_project_back.modules.audit.application.services.AdministrativeAudit;
+import br.com.eyesproject.eyes_project_back.modules.audit.domain.models.AuditAction;
 import br.com.eyesproject.eyes_project_back.modules.user.application.models.UserView;
 import br.com.eyesproject.eyes_project_back.modules.user.application.ports.in.UpdateUserStatusUseCase;
 import br.com.eyesproject.eyes_project_back.modules.user.application.ports.out.UserRepository;
@@ -11,15 +13,36 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Map;
+
 @Service
 @RequiredArgsConstructor
 public class UpdateUserStatusUseCaseImpl implements UpdateUserStatusUseCase {
 
     private final UserRepository userRepository;
+    private final AdministrativeAudit administrativeAudit;
 
     @Override
     @Transactional
     public UserView execute(String id, boolean active) {
+        AuditAction action = active ? AuditAction.USER_ACTIVATED : AuditAction.USER_DEACTIVATED;
+        try {
+            UserView result = changeStatus(id, active);
+            administrativeAudit.success(
+                    action,
+                    null,
+                    "USER",
+                    id,
+                    Map.of("active", Boolean.toString(active))
+            );
+            return result;
+        } catch (RuntimeException failure) {
+            administrativeAudit.failure(action, null, "USER", id, failure);
+            throw failure;
+        }
+    }
+
+    private UserView changeStatus(String id, boolean active) {
         User current = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário não encontrado"));
 

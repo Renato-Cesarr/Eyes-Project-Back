@@ -145,6 +145,31 @@ cinco tentativas a cada 15 minutos e podem ser ajustados por
 deve ser considerado após configurar um proxy reverso confiável; por padrão a
 aplicação usa o endereço remoto observado pelo servidor.
 
+### Auditoria administrativa
+
+Operações administrativas críticas produzem eventos imutáveis de auditoria.
+São registrados convite e reenvio de convite, ativação ou desativação de conta
+e aprovação ou rejeição de solicitação de acesso. Cada evento informa ação,
+resultado (`SUCCESS` ou `FAILURE`), identificador do administrador, alvo,
+instante, correlação da requisição e metadados técnicos previamente
+sanitizados.
+
+`GET /api/v1/audit` exige papel `ADMIN`, retorna os eventos mais recentes
+primeiro e aceita `page`, `size` (máximo de 100), `actorUserId`, `action`,
+`result`, `occurredFrom` e `occurredTo`. Não existem rotas para alterar ou
+excluir eventos. O cabeçalho opcional `X-Correlation-ID` pode conter até 64
+caracteres alfanuméricos, ponto, hífen ou sublinhado; valores ausentes ou
+inválidos são substituídos por um UUID gerado pelo servidor e devolvido na
+resposta.
+
+Senhas, tokens, cabeçalhos de autorização, imagens e frames são bloqueados dos
+metadados. Falhas guardam somente uma categoria neutra, nunca a mensagem
+interna da exceção. O identificador do ator é um retrato histórico e permanece
+mesmo se a conta for removida. Para o MVP, os registros são preservados por 180
+dias; a automação de descarte fica desabilitada até a definição da política de
+privacidade e deve ser implementada como processo controlado, nunca como uma
+rota pública.
+
 ## Fluxo Git
 
 As funcionalidades partem de `dev`, usam `feat/<linear-id>-<nome-curto>` e

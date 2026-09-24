@@ -52,6 +52,9 @@ class OpenApiContractIntegrationTest {
                 .andExpect(jsonPath("$.paths['/api/v1/access-requests'].post.responses['202']").exists())
                 .andExpect(jsonPath("$.paths['/api/v1/access-requests'].get.security[0].bearerAuth").isArray())
                 .andExpect(jsonPath("$.paths['/api/v1/access-requests/{id}/approve'].post.security[0].bearerAuth").isArray())
-                .andExpect(jsonPath("$.paths['/api/v1/access-requests/{id}/reject'].post.security[0].bearerAuth").isArray());
+                .andExpect(jsonPath("$.paths['/api/v1/access-requests/{id}/reject'].post.security[0].bearerAuth").isArray())
+                .andExpect(jsonPath("$.paths['/api/v1/audit'].get.security[0].bearerAuth").isArray())
+                .andExpect(jsonPath("$.paths['/api/v1/audit'].post").doesNotExist())
+                .andExpect(jsonPath("$.paths['/api/v1/audit'].delete").doesNotExist());
     }
 }

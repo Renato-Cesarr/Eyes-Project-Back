@@ -1,6 +1,8 @@
 package br.com.eyesproject.eyes_project_back.modules.user.application.services;
 
 import br.com.eyesproject.eyes_project_back.global.exceptions.ConflictException;
+import br.com.eyesproject.eyes_project_back.modules.audit.application.services.AdministrativeAudit;
+import br.com.eyesproject.eyes_project_back.modules.audit.domain.models.AuditAction;
 import br.com.eyesproject.eyes_project_back.modules.user.application.ports.out.UserRepository;
 import br.com.eyesproject.eyes_project_back.modules.user.domain.models.User;
 import org.junit.jupiter.api.Test;
@@ -21,6 +23,7 @@ class ResendInvitationUseCaseImplTest {
 
     @Mock UserRepository userRepository;
     @Mock InvitationIssuer invitationIssuer;
+    @Mock AdministrativeAudit administrativeAudit;
     @InjectMocks ResendInvitationUseCaseImpl useCase;
 
     @Test
@@ -31,6 +34,9 @@ class ResendInvitationUseCaseImplTest {
         useCase.execute(USER_ID);
 
         verify(invitationIssuer).issue(invited);
+        verify(administrativeAudit).success(
+                AuditAction.INVITATION_RESENT, null, "USER", USER_ID, null
+        );
     }
 
     @Test
@@ -40,5 +46,8 @@ class ResendInvitationUseCaseImplTest {
 
         assertThrows(ConflictException.class, () -> useCase.execute(USER_ID));
         verifyNoInteractions(invitationIssuer);
+        verify(administrativeAudit).failure(
+                eq(AuditAction.INVITATION_RESENT), isNull(), eq("USER"), eq(USER_ID), any(ConflictException.class)
+        );
     }
 }

@@ -1,6 +1,8 @@
 package br.com.eyesproject.eyes_project_back.global.security;
 
 import br.com.eyesproject.eyes_project_back.modules.auth.application.ports.out.TokenProvider;
+import br.com.eyesproject.eyes_project_back.modules.audit.application.models.AuditPage;
+import br.com.eyesproject.eyes_project_back.modules.audit.application.ports.in.SearchAuditLogsUseCase;
 import br.com.eyesproject.eyes_project_back.modules.user.application.ports.in.CreateUserUseCase;
 import br.com.eyesproject.eyes_project_back.modules.user.application.ports.in.SetupPasswordUseCase;
 import br.com.eyesproject.eyes_project_back.modules.user.application.ports.out.UserRepository;
@@ -19,6 +21,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.util.Optional;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
@@ -55,13 +58,17 @@ class RbacSecurityIntegrationTest {
     @MockitoBean
     private SetupPasswordUseCase setupPasswordUseCase;
 
+    @MockitoBean
+    private SearchAuditLogsUseCase searchAuditLogsUseCase;
+
     private MockMvc mockMvc;
     private User admin;
     private User student;
 
     @BeforeEach
     void setUp() {
-        reset(tokenProvider, userRepository, createUserUseCase, setupPasswordUseCase);
+        reset(tokenProvider, userRepository, createUserUseCase, setupPasswordUseCase,
+                searchAuditLogsUseCase);
         mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
                 .apply(springSecurity())
                 .build();
@@ -73,6 +80,8 @@ class RbacSecurityIntegrationTest {
         when(tokenProvider.validateToken(STUDENT_TOKEN)).thenReturn(student.getEmail());
         when(userRepository.findByEmail(admin.getEmail())).thenReturn(Optional.of(admin));
         when(userRepository.findByEmail(student.getEmail())).thenReturn(Optional.of(student));
+        when(searchAuditLogsUseCase.execute(any()))
+                .thenReturn(new AuditPage(List.of(), 0, 20, 0, 0));
     }
 
     @Test
@@ -114,6 +123,21 @@ class RbacSecurityIntegrationTest {
                 .andExpect(status().isUnauthorized());
 
         verify(createUserUseCase, never()).execute(any(User.class));
+    }
+
+    @Test
+    @DisplayName("Only ADMIN can consult audit events")
+    void onlyAdminCanConsultAudit() throws Exception {
+        mockMvc.perform(get("/api/v1/audit")
+                        .header("Authorization", "Bearer " + ADMIN_TOKEN))
+                .andExpect(status().isOk());
+
+        mockMvc.perform(get("/api/v1/audit")
+                        .header("Authorization", "Bearer " + STUDENT_TOKEN))
+                .andExpect(status().isForbidden());
+
+        mockMvc.perform(get("/api/v1/audit"))
+                .andExpect(status().isUnauthorized());
     }
 
     @Test
