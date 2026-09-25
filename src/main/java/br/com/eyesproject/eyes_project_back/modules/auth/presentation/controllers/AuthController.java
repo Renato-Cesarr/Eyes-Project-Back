@@ -1,6 +1,5 @@
 package br.com.eyesproject.eyes_project_back.modules.auth.presentation.controllers;
 
-import br.com.eyesproject.eyes_project_back.global.exceptions.ErrorResponse;
 import br.com.eyesproject.eyes_project_back.modules.auth.application.ports.in.LoginUseCase;
 import br.com.eyesproject.eyes_project_back.modules.auth.presentation.dto.LoginRequest;
 import br.com.eyesproject.eyes_project_back.modules.auth.presentation.dto.LoginResponse;
@@ -15,6 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.ProblemDetail;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -51,7 +51,7 @@ public class AuthController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Solicitação processada de forma neutra"),
             @ApiResponse(responseCode = "422", description = "E-mail fora do contrato",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     public ResponseEntity<Void> forgotPassword(@RequestBody @Valid br.com.eyesproject.eyes_project_back.modules.user.presentation.dto.ForgotPasswordRequest request) {
         forgotPasswordUseCase.execute(request.getEmail());
@@ -66,9 +66,9 @@ public class AuthController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Senha redefinida"),
             @ApiResponse(responseCode = "400", description = "Token inválido, expirado, já usado ou de outro tipo",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
             @ApiResponse(responseCode = "422", description = "Token ou senha fora do contrato",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     public ResponseEntity<Void> resetPassword(@RequestBody @Valid br.com.eyesproject.eyes_project_back.modules.user.presentation.dto.ResetPasswordRequest request) {
         resetPasswordUseCase.execute(request.getToken(), request.getPassword());
