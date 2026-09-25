@@ -25,7 +25,7 @@ java -version
 3. Execute os testes:
 
 ```powershell
-./mvnw.cmd clean verify -Dspring.profiles.active=test
+./mvnw.cmd "-Dspring.profiles.active=test" clean verify
 ```
 
 O script de diagnóstico valida o Java 21, o Maven Wrapper e as versões
@@ -35,6 +35,54 @@ declaradas no repositório. A CI executa o mesmo diagnóstico antes do build.
 
 As credenciais de banco, SMTP e JWT devem ser fornecidas por variáveis de
 ambiente ou secrets da CI. Nunca versionamos `.env`, tokens ou senhas.
+
+### HTTP, CORS e proteção contra abuso
+
+Erros HTTP seguem o formato `application/problem+json` (RFC 9457) e sempre
+incluem `type`, `title`, `status`, `detail`, `instance`, um `code` estável e o
+`correlationId` da requisição. Falhas inesperadas retornam `500` sem expor
+stack trace ou detalhes internos; o diagnóstico completo permanece somente no
+log estruturado do servidor. A propriedade de compatibilidade `message` repete
+temporariamente o `detail` para clientes anteriores e não deve ser usada em
+novas integrações.
+
+As origens permitidas são definidas explicitamente em
+`CORS_ALLOWED_ORIGINS`, separadas por vírgula. Wildcards e valores com caminho,
+query string ou fragmento são rejeitados na inicialização. O padrão local é
+`http://localhost:4200`, sem credenciais gerenciadas pelo navegador.
+
+Os endpoints públicos sensíveis usam token bucket em memória, isolado por
+endereço remoto e por fluxo:
+
+| Fluxo | Capacidade padrão | Janela | Variáveis |
+| --- | ---: | ---: | --- |
+| Login | 10 | 5 minutos | `LOGIN_RATE_LIMIT_CAPACITY`, `LOGIN_RATE_LIMIT_WINDOW_SECONDS` |
+| Solicitação de acesso | 5 | 15 minutos | `ACCESS_REQUEST_RATE_LIMIT_CAPACITY`, `ACCESS_REQUEST_RATE_LIMIT_WINDOW_SECONDS` |
+| Recuperação/redefinição | 5 | 15 minutos | `PASSWORD_RECOVERY_RATE_LIMIT_CAPACITY`, `PASSWORD_RECOVERY_RATE_LIMIT_WINDOW_SECONDS` |
+
+Ao exceder o limite, a API responde `429` com `Retry-After`. A estratégia é
+local ao processo e adequada ao MVP de instância única; armazenamento
+distribuído fica fora deste escopo.
+
+Os logs usam JSON no formato Logstash por padrão e incluem os dados do MDC,
+inclusive `correlationId`. Para desenvolvimento local, `LOG_STRUCTURED_FORMAT`
+pode selecionar outro formato suportado pelo Spring Boot.
+
+### Testes de integração com PostgreSQL
+
+As suítes `*PostgresIntegrationTest` usam Testcontainers com PostgreSQL 15 e
+executam o Flyway antes da validação do Hibernate. Assim, migrations, restrições
+e fluxos críticos de segurança são verificados no mesmo banco usado pela
+aplicação, sem depender de uma instância configurada manualmente.
+
+Para executá-las localmente, inicie o Docker Desktop e rode:
+
+```powershell
+./mvnw.cmd "-Dtest=*PostgresIntegrationTest" test
+```
+
+Sem Docker, essas suítes são ignoradas localmente; a CI exige que todas sejam
+executadas, com zero cenários ignorados.
 
 ### Primeiro administrador
 
@@ -138,10 +186,9 @@ emite o convite de definição de senha e grava a auditoria uma única vez. A
 rejeição exige justificativa e também é auditada. Decisões finais não podem ser
 invertidas; repetir a mesma decisão é seguro e não produz efeitos duplicados.
 
-O endpoint público aplica um limite fixo por endereço IP. Os valores padrão são
-cinco tentativas a cada 15 minutos e podem ser ajustados por
-`ACCESS_REQUEST_RATE_LIMIT_MAX` e
-`ACCESS_REQUEST_RATE_LIMIT_WINDOW_SECONDS`. O cabeçalho `X-Forwarded-For` só
+O endpoint público aplica um token bucket por endereço IP. Os valores padrão são
+cinco tentativas a cada 15 minutos e podem ser ajustados pelas variáveis da
+tabela de proteção contra abuso. O cabeçalho `X-Forwarded-For` só
 deve ser considerado após configurar um proxy reverso confiável; por padrão a
 aplicação usa o endereço remoto observado pelo servidor.
 
