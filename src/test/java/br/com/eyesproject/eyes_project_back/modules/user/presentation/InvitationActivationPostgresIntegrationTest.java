@@ -1,5 +1,6 @@
 package br.com.eyesproject.eyes_project_back.modules.user.presentation;
 
+import br.com.eyesproject.eyes_project_back.support.PostgresContainerIntegrationTest;
 import br.com.eyesproject.eyes_project_back.modules.auth.application.ports.out.TokenProvider;
 import br.com.eyesproject.eyes_project_back.modules.user.application.ports.out.AuthTokenRepository;
 import br.com.eyesproject.eyes_project_back.modules.user.application.ports.out.EmailSenderPort;
@@ -11,14 +12,12 @@ import br.com.eyesproject.eyes_project_back.modules.user.domain.models.UserRole;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -47,9 +46,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
-@ActiveProfiles("postgres-it")
-@EnabledIfEnvironmentVariable(named = "RUN_POSTGRES_IT", matches = "true")
-class InvitationActivationPostgresIntegrationTest {
+class InvitationActivationPostgresIntegrationTest extends PostgresContainerIntegrationTest {
 
     private static final String ACTIVATION_PATH = "/api/v1/users/setup-password";
     private static final String NEUTRAL_ACTIVATION_ERROR = "Link de ativação inválido ou expirado";
@@ -108,7 +105,7 @@ class InvitationActivationPostgresIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(activationRequest(setupToken)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(NEUTRAL_ACTIVATION_ERROR));
+                .andExpect(jsonPath("$.detail").value(NEUTRAL_ACTIVATION_ERROR));
     }
 
     @Test
@@ -123,7 +120,7 @@ class InvitationActivationPostgresIntegrationTest {
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(activationRequest(token)))
                     .andExpect(status().isBadRequest())
-                    .andExpect(jsonPath("$.message").value(NEUTRAL_ACTIVATION_ERROR));
+                    .andExpect(jsonPath("$.detail").value(NEUTRAL_ACTIVATION_ERROR));
         }
 
         User unchangedUser = userRepository.findByEmail(invitedUser.getEmail()).orElseThrow();
@@ -229,7 +226,7 @@ class InvitationActivationPostgresIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(requestBody))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value(NEUTRAL_RESET_ERROR));
+                .andExpect(jsonPath("$.detail").value(NEUTRAL_RESET_ERROR));
     }
 
     @Test

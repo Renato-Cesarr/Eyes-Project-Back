@@ -11,21 +11,6 @@ jobs:
     name: Build + Test + Sonar
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_DB: eyes_project_db
-          POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U postgres -d eyes_project_db"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
     steps:
       - name: Checkout código
         uses: actions/checkout@v4
@@ -44,26 +29,22 @@ jobs:
         shell: pwsh
         run: ./scripts/check-toolchain.ps1
 
-      - name: Validar migrações e fluxos de segurança no PostgreSQL
-        run: ./mvnw -Dtest='*PostgresIntegrationTest' test -Dspring.profiles.active=postgres-it
-        env:
-          RUN_POSTGRES_IT: true
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_NAME: eyes_project_db
-          DB_USER: postgres
-          DB_PASSWORD: postgres
-          JWT_SECRET: testing_secret_key
-
-      - name: Build + Testes
+      - name: Build + testes unitários e PostgreSQL
         run: ./mvnw clean verify -Dspring.profiles.active=test
         env:
-          DB_HOST: localhost
-          DB_PORT: 5432
-          DB_NAME: eyes_project_db
-          DB_USER: postgres
-          DB_PASSWORD: postgres
           JWT_SECRET: testing_secret_key
+
+      - name: Confirmar execução dos testes PostgreSQL
+        shell: bash
+        run: |
+          reports=(target/surefire-reports/TEST-*PostgresIntegrationTest.xml)
+          test -e "${reports[0]}"
+          for report in "${reports[@]}"; do
+            grep -q 'skipped="0"' "$report" || {
+              echo "A suíte PostgreSQL não executou completamente: $report"
+              exit 1
+            }
+          done
 
       - name: Rodar SonarCloud
         env:

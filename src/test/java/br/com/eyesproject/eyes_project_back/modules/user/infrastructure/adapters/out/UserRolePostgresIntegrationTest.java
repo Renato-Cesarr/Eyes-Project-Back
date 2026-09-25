@@ -1,15 +1,14 @@
 package br.com.eyesproject.eyes_project_back.modules.user.infrastructure.adapters.out;
 
+import br.com.eyesproject.eyes_project_back.support.PostgresContainerIntegrationTest;
 import br.com.eyesproject.eyes_project_back.modules.user.application.ports.out.UserRepository;
 import br.com.eyesproject.eyes_project_back.modules.user.domain.models.User;
 import br.com.eyesproject.eyes_project_back.modules.user.domain.models.UserRole;
 import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -18,10 +17,8 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest
-@ActiveProfiles("postgres-it")
-@EnabledIfEnvironmentVariable(named = "RUN_POSTGRES_IT", matches = "true")
 @Transactional
-class UserRolePostgresIntegrationTest {
+class UserRolePostgresIntegrationTest extends PostgresContainerIntegrationTest {
 
     @Autowired
     private UserRepository userRepository;
