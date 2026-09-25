@@ -1,5 +1,6 @@
 package br.com.eyesproject.eyes_project_back.modules.accessrequest.presentation;
 
+import br.com.eyesproject.eyes_project_back.support.PostgresContainerIntegrationTest;
 import br.com.eyesproject.eyes_project_back.modules.accessrequest.application.ports.in.ApproveAccessRequestUseCase;
 import br.com.eyesproject.eyes_project_back.modules.accessrequest.application.ports.in.SubmitAccessRequestUseCase;
 import br.com.eyesproject.eyes_project_back.modules.accessrequest.application.ports.out.AccessRequestRepository;
@@ -12,13 +13,11 @@ import br.com.eyesproject.eyes_project_back.modules.user.domain.models.UserRole;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -44,9 +43,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
-@ActiveProfiles("postgres-it")
-@EnabledIfEnvironmentVariable(named = "RUN_POSTGRES_IT", matches = "true")
-class AccessRequestPostgresIntegrationTest {
+class AccessRequestPostgresIntegrationTest extends PostgresContainerIntegrationTest {
 
     @Autowired WebApplicationContext webApplicationContext;
     @Autowired UserRepository userRepository;
@@ -99,7 +96,7 @@ class AccessRequestPostgresIntegrationTest {
                                 {"name":"Existing","email":"EXISTING@example.com"}
                                 """))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.message").value("Não é possível criar uma solicitação para este e-mail"));
+                .andExpect(jsonPath("$.detail").value("Não é possível criar uma solicitação para este e-mail"));
 
         assertEquals(0, count("SELECT COUNT(*) FROM tb_access_requests"));
     }

@@ -1,6 +1,5 @@
 package br.com.eyesproject.eyes_project_back.modules.user.presentation.controllers;
 
-import br.com.eyesproject.eyes_project_back.global.exceptions.ErrorResponse;
 import br.com.eyesproject.eyes_project_back.modules.user.application.ports.in.CreateUserUseCase;
 import br.com.eyesproject.eyes_project_back.modules.user.application.ports.in.GetUserUseCase;
 import br.com.eyesproject.eyes_project_back.modules.user.application.ports.in.ResendInvitationUseCase;
@@ -25,6 +24,7 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -79,7 +79,7 @@ public class UserController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Usuário encontrado"),
             @ApiResponse(responseCode = "404", description = "Usuário não encontrado",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     public UserResponse getUser(@PathVariable String id) {
         return UserResponse.from(getUserUseCase.execute(id));
@@ -92,9 +92,9 @@ public class UserController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Status atualizado"),
             @ApiResponse(responseCode = "409", description = "Alteração viola uma regra de segurança",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
             @ApiResponse(responseCode = "422", description = "Status ausente",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     public UserResponse updateStatus(
             @PathVariable String id,
@@ -110,7 +110,7 @@ public class UserController {
     @ApiResponses({
             @ApiResponse(responseCode = "204", description = "Convite reenviado"),
             @ApiResponse(responseCode = "409", description = "A conta não possui convite pendente",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     public ResponseEntity<Void> resendInvitation(@PathVariable String id) {
         resendInvitationUseCase.execute(id);
@@ -126,11 +126,11 @@ public class UserController {
     @ApiResponses({
             @ApiResponse(responseCode = "201", description = "Convite criado"),
             @ApiResponse(responseCode = "409", description = "E-mail já cadastrado",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
             @ApiResponse(responseCode = "401", description = "JWT ausente ou inválido"),
             @ApiResponse(responseCode = "403", description = "Usuário sem papel ADMIN"),
             @ApiResponse(responseCode = "422", description = "Dados do convite inválidos",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     public ResponseEntity<Void> createUser(@RequestBody @Valid CreateUserRequest request) {
         User user = User.builder()
@@ -150,9 +150,9 @@ public class UserController {
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Conta ativada"),
             @ApiResponse(responseCode = "400", description = "Token inválido, expirado, já usado ou de outro tipo",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
             @ApiResponse(responseCode = "422", description = "Token ou senha fora do contrato",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     public ResponseEntity<Void> setupPassword(@RequestBody @Valid SetupPasswordRequest request) {
         setupPasswordUseCase.execute(request.getToken(), request.getPassword());

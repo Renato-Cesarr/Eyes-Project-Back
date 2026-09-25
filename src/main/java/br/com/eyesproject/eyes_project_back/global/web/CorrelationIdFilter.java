@@ -20,6 +20,7 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
 
     public static final String HEADER_NAME = "X-Correlation-ID";
     public static final String MDC_KEY = "correlationId";
+    public static final String REQUEST_ATTRIBUTE = CorrelationIdFilter.class.getName() + ".correlationId";
     private static final Pattern SAFE_VALUE = Pattern.compile("[A-Za-z0-9._-]{1,64}");
 
     @Override
@@ -30,6 +31,7 @@ public class CorrelationIdFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
         String correlationId = resolveCorrelationId(request.getHeader(HEADER_NAME));
         MDC.put(MDC_KEY, correlationId);
+        request.setAttribute(REQUEST_ATTRIBUTE, correlationId);
         response.setHeader(HEADER_NAME, correlationId);
         try {
             filterChain.doFilter(request, response);

@@ -107,7 +107,10 @@ class RbacSecurityIntegrationTest {
                         .content("""
                                 {"name":"New Student","email":"student@example.com"}
                                 """))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isForbidden())
+                .andExpect(header().string("Content-Type", "application/problem+json"))
+                .andExpect(jsonPath("$.code").value("ACCESS_DENIED"))
+                .andExpect(jsonPath("$.correlationId").isNotEmpty());
 
         verify(createUserUseCase, never()).execute(any(User.class));
     }
@@ -120,7 +123,10 @@ class RbacSecurityIntegrationTest {
                         .content("""
                                 {"name":"New Student","email":"student@example.com"}
                                 """))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized())
+                .andExpect(header().string("Content-Type", "application/problem+json"))
+                .andExpect(jsonPath("$.code").value("AUTHENTICATION_REQUIRED"))
+                .andExpect(jsonPath("$.correlationId").isNotEmpty());
 
         verify(createUserUseCase, never()).execute(any(User.class));
     }
@@ -193,5 +199,15 @@ class RbacSecurityIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(header().string("Access-Control-Allow-Origin", "http://localhost:4200"))
                 .andExpect(header().doesNotExist("Access-Control-Allow-Credentials"));
+    }
+
+    @Test
+    @DisplayName("CORS rejects origins that are not explicitly configured")
+    void corsRejectsArbitraryOrigin() throws Exception {
+        mockMvc.perform(options("/api/v1/auth/me")
+                        .header("Origin", "https://attacker.example")
+                        .header("Access-Control-Request-Method", "GET"))
+                .andExpect(status().isForbidden())
+                .andExpect(header().doesNotExist("Access-Control-Allow-Origin"));
     }
 }

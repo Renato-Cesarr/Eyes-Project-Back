@@ -1,6 +1,5 @@
 package br.com.eyesproject.eyes_project_back.modules.accessrequest.presentation.controllers;
 
-import br.com.eyesproject.eyes_project_back.global.exceptions.ErrorResponse;
 import br.com.eyesproject.eyes_project_back.modules.accessrequest.application.models.AccessRequestQuery;
 import br.com.eyesproject.eyes_project_back.modules.accessrequest.application.ports.in.ApproveAccessRequestUseCase;
 import br.com.eyesproject.eyes_project_back.modules.accessrequest.application.ports.in.RejectAccessRequestUseCase;
@@ -24,6 +23,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.ProblemDetail;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -52,11 +52,11 @@ public class AccessRequestController {
     @ApiResponses({
             @ApiResponse(responseCode = "202", description = "Solicitação recebida ou já pendente"),
             @ApiResponse(responseCode = "409", description = "E-mail indisponível para nova solicitação",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
             @ApiResponse(responseCode = "422", description = "Dados inválidos",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
             @ApiResponse(responseCode = "429", description = "Limite de solicitações excedido",
-                    content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+                    content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     public ResponseEntity<SubmitAccessRequestResponse> submit(
             @RequestBody @Valid SubmitAccessRequestRequest request

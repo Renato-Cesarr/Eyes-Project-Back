@@ -26,6 +26,7 @@ class CorrelationIdFilterTest {
         filter.doFilter(request, response, new MockFilterChain());
 
         assertEquals("mobile.request-123", response.getHeader(CorrelationIdFilter.HEADER_NAME));
+        assertEquals("mobile.request-123", request.getAttribute(CorrelationIdFilter.REQUEST_ATTRIBUTE));
         assertNull(MDC.get(CorrelationIdFilter.MDC_KEY));
     }
 

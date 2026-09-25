@@ -1,5 +1,6 @@
 package br.com.eyesproject.eyes_project_back.modules.user.presentation;
 
+import br.com.eyesproject.eyes_project_back.support.PostgresContainerIntegrationTest;
 import br.com.eyesproject.eyes_project_back.global.exceptions.ConflictException;
 import br.com.eyesproject.eyes_project_back.modules.auth.application.ports.out.TokenProvider;
 import br.com.eyesproject.eyes_project_back.modules.user.application.ports.in.UpdateUserStatusUseCase;
@@ -13,14 +14,12 @@ import br.com.eyesproject.eyes_project_back.modules.user.domain.models.UserRole;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -48,9 +47,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
-@ActiveProfiles("postgres-it")
-@EnabledIfEnvironmentVariable(named = "RUN_POSTGRES_IT", matches = "true")
-class UserManagementPostgresIntegrationTest {
+class UserManagementPostgresIntegrationTest extends PostgresContainerIntegrationTest {
 
     @Autowired WebApplicationContext webApplicationContext;
     @Autowired UserRepository userRepository;
