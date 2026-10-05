@@ -6,6 +6,7 @@ Este ambiente destina-se à demonstração local da API administrativa. Não con
 
 - Docker com Compose v2+ que suporte `up --wait`, Docker Desktop iniciado no Windows.
 - PowerShell 7+ (`pwsh`), Java 21 e Maven Wrapper do repositório. Scripts usam a raiz do checkout independentemente do diretório inicial.
+- No Linux, executar `chmod +x ./mvnw` antes do diagnóstico/launcher (o wrapper histórico está versionado sem bit executável).
 - Portas disponíveis: PostgreSQL **55432**, SMTP **1025**, Mailpit HTTP **8025**, API **8080**. Todas expostas em **127.0.0.1**. Ajustar DB_PORT/SMTP_PORT/MAILPIT_HTTP_PORT/PORT no .env antes de iniciar se necessário; as quatro devem ser diferentes.
 - Projeto Compose exclusivo `eyes-local`; volumes `eyes-local_postgres-data` e `eyes-local_mailpit-data`. Um checkout ativo por projeto; o script rejeita containers pertencentes a outro checkout. Serviços de outros projetos não são parados/resetados.
 
@@ -82,3 +83,7 @@ Imagens oficiais fixadas por digest multi-arquitetura, verificadas em 05/10/2026
 [Compose up --wait](https://docs.docker.com/reference/cli/docker/compose/up/), [imagens oficiais Mailpit](https://mailpit.axllent.org/docs/install/docker/), [healthchecks /readyz](https://mailpit.axllent.org/docs/integration/healthcheck/), [release Mailpit v1.31.4](https://github.com/axllent/mailpit/releases/tag/v1.31.4). O healthcheck CLI /mailpit readyz foi conferido na imagem fixada. Rede bridge é necessária para as portas publicadas funcionarem no Docker Desktop com a API nativa; rede internal:true não é usada. As publicações em loopback mantêm o acesso restrito ao host.
 
 Não existe artefato de implantação produtiva neste pacote. O exemplo de ambiente antigo com Mailtrap foi substituído pelo cenário local; produção deve fornecer banco/SMTP/JWT reais por configuração própria e sem profile local.
+
+## Evidência da implementação
+
+[Recibo versionado da validação](local-environment-evidence.json): prova executada no Windows com containers Linux, commit de implementação 91be0ce limpo, 140 testes sem skips e ciclo real de migrations/SMTP. O commit posterior do recibo/guia muda somente documentação; CI Linux verifica Java/PostgreSQL, sem alegar execução dos novos scripts PowerShell no Linux. Execução visual web/mobile permanece REN-73/32.
