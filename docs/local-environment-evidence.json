@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "implementationCommit": "91be0ce67f897402e3fa07097cc4653cfece3962",
+  "sourceCleanDuringFinalSmoke": true,
+  "hashEncoding": "UTF-8 LF",
+  "functionalFilesSha256": {
+    "docker-compose.yml": "0a16df8c043e5c96fd96364d68586ab84dab2597ba7b3fbd1f46c75a1c55aa69",
+    ".env.example": "271e658d40a5746474b6de6dc359e8937122e53ee9fe70b95a7fa857b4d76129",
+    ".gitignore": "08f69197cd90c39e59626fcae4b9f27b97d17d39fef43f712fce42c113eae23d",
+    "src/main/resources/application-local.properties": "c395e7b9d77437fd28be4dba641409cb1cedcba24adab8de741d57942939827f",
+    "scripts/local-common.ps1": "b2df5dddc5830bfceb14998b519b55aeb815fea1501dbf8d9f3f0d31c4fc9e61",
+    "scripts/local-services.ps1": "26703b06a8f7b8ce66e861ecffbe5d8391d597cdd59e195238a6665dd3ac806a",
+    "scripts/start-local-api.ps1": "6f7e955283a79ada1b544e99058588a2c70def597259b67e8d5eb420c6b74e70",
+    "scripts/verify-local-environment.ps1": "01cea42b2630390aa6d3586164d44df6162e5fe164d609ae2eeb372f35802e42"
+  },
+  "host": "Windows; PowerShell 7; Java 21.0.12.1; Linux containers on Docker Desktop",
+  "dockerVersion": "29.7.2",
+  "composeVersion": "5.4.0",
+  "images": {
+    "postgres": "postgres:15.19-alpine@sha256:f7d23353e1b15400d22ebe31189f4d314b87a4c129cc400c8c2d8d4ca127bf81",
+    "mailpit": "axllent/mailpit:v1.31.4@sha256:b68349e3a014b90c5610bfb26b2ae36f3892d7b8cf25ee140c6c71c98d2fcf48"
+  },
+  "automatedTests": {
+    "tests": 140,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "postgresIntegrationIncluded": true
+  },
+  "backendAndSmtp": {
+    "verifiedAt": "2026-10-05T17:02:53.0077047Z",
+    "sourceCommit": "91be0ce67f897402e3fa07097cc4653cfece3962",
+    "sourceDirty": false,
+    "project": "eyes-local",
+    "scope": "backend + PostgreSQL + SMTP/Mailpit; frontend/mobile not executed",
+    "migrations": [
+      "1",
+      "2",
+      "3",
+      "4",
+      "5"
+    ],
+    "mailpitReady": true,
+    "administratorLogin": "passed",
+    "invitationCaptured": "passed",
+    "accountActivation": "passed",
+    "studentLogin": "passed",
+    "recoveryCaptured": "passed",
+    "passwordReset": "passed",
+    "recoveredIdentityPreserved": true,
+    "messageIds": [
+      "1e4wxIVnTSOBbqW5jswh9U",
+      "1dyuvadpkVBNG2gk7pRJOM"
+    ],
+    "secretsIncluded": false
+  },
+  "operationalChecks": {
+    "verifiedAt": "2026-10-05T17:00:09.1013942Z",
+    "initPreservedEnvironment": true,
+    "processEnvironmentRestored": true,
+    "loopbackBindVerified": true,
+    "resetWithoutConfirmationRejected": true,
+    "stopStartPreservedDatabaseAndMail": true,
+    "migrationsPreserved": "5",
+    "messagesPreserved": 2,
+    "confirmedResetScopedToOwnVolumes": true,
+    "freshDatabaseAfterReset": true,
+    "otherProjectPreserved": "anima-postgres",
+    "apiStoppedForLifecycleVerification": true,
+    "credentialsIncluded": false
+  },
+  "emptyDatabaseBeforeFinalStartupVerified": true,
+  "apiLoopbackVerified": true,
+  "limits": [
+    "Local backend/PostgreSQL/SMTP verification; frontend and mobile not executed.",
+    "New PowerShell operational scripts executed on Windows; Linux operational execution not claimed.",
+    "No production deployment or external email.",
+    "No sessions upload, physical calibration, TalkBack or user acceptance claimed."
+  ],
+  "evidenceLocations": {
+    "logs": "tmp/ren39-verification/",
+    "finalSmoke": "output/execucao-2026-10-05/REN-39-local-smoke-final.json",
+    "guards": "tmp/ren39-verification/operational-guards.json"
+  }
+}

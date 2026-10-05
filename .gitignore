@@ -36,6 +36,8 @@ build/
 
 ### Environments ###
 .env
+.env.*
+!.env.example
 infra/
 
 ### Logs ###

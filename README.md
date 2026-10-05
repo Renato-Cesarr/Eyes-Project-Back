@@ -31,6 +31,21 @@ java -version
 O script de diagnóstico valida o Java 21, o Maven Wrapper e as versões
 declaradas no repositório. A CI executa o mesmo diagnóstico antes do build.
 
+## Ambiente local reproduzível
+
+PostgreSQL 15 + Mailpit, em loopback, com healthchecks, segredos locais gerados
+e reset limitado ao projeto. Consulte o [guia de execução e prova real](docs/local-environment.md).
+
+```powershell
+./scripts/local-services.ps1 -Action start
+./scripts/start-local-api.ps1 -BootstrapAdmin
+# Em outro terminal, depois de a API iniciar:
+./scripts/verify-local-environment.ps1
+```
+
+Requer PowerShell 7+. A API roda nativamente no profile local; o roteiro
+verifica convite/ativação/recuperação no PostgreSQL e Mailpit reais.
+
 ## Variáveis de ambiente
 
 As credenciais de banco, SMTP e JWT devem ser fornecidas por variáveis de
