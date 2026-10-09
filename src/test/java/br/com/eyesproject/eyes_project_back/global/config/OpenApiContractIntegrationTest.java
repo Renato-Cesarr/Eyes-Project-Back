@@ -57,4 +57,12 @@ class OpenApiContractIntegrationTest {
                 .andExpect(jsonPath("$.paths['/api/v1/audit'].post").doesNotExist())
                 .andExpect(jsonPath("$.paths['/api/v1/audit'].delete").doesNotExist());
     }
+    @Test
+    void scanMetadataEndpointsRequireBearerAuthentication() throws Exception {
+        mockMvc.perform(get("/v3/api-docs")).andExpect(status().isOk())
+                .andExpect(jsonPath("$.paths['/api/v1/scan-sessions'].post.security[0].bearerAuth").isArray())
+                .andExpect(jsonPath("$.paths['/api/v1/scan-sessions/{id}/events'].post.requestBody").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/scan-sessions/{id}/finish'].post.requestBody").exists())
+                .andExpect(jsonPath("$.paths['/api/v1/scan-sessions/aggregate'].get.security[0].bearerAuth").isArray());
+    }
 }
