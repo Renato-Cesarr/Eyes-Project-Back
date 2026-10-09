@@ -237,3 +237,11 @@ rota pública.
 As funcionalidades partem de `dev`, usam `feat/<linear-id>-<nome-curto>` e
 retornam por Pull Request. A promoção para produção ocorre de `dev` para
 `main`, que permanece protegida.
+
+## Sessões remotas opcionais
+
+Contrato restrito para sessões e eventos anunciados, com coleta desabilitada
+por padrão, consentimento explícito, ownership, idempotência, retenção e exclusão.
+Consulte [o contrato v1](docs/contracts/scan-sessions-v1.md) antes de habilitar
+SCAN_COLLECTION_ENABLED ou integrar o consumidor mobile. A API não comprova
+upload no aplicativo ou validação em aparelho.

@@ -55,6 +55,18 @@ public class GlobalExceptionHandler {
                         "Limite de solicitações excedido", ex.getMessage(), request));
     }
 
+    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ProblemDetail> handleInvalidParameter(Exception ex, HttpServletRequest request) {
+        return response(HttpStatus.BAD_REQUEST, "INVALID_REQUEST", "Requisição inválida",
+                "Um parâmetro da requisição possui formato inválido.", request);
+    }
+
+    @ExceptionHandler(org.springframework.web.HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ProblemDetail> handleUnsupportedMedia(Exception ex, HttpServletRequest request) {
+        return response(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "UNSUPPORTED_MEDIA_TYPE", "Formato não suportado",
+                "O endpoint requer o formato JSON indicado no contrato.", request);
+    }
+
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ProblemDetail> handleMalformedBody(
             HttpMessageNotReadableException ex,
