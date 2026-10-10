@@ -1,6 +1,6 @@
 package br.com.eyesproject.eyes_project_back.modules.auth.application.services;
 
-import br.com.eyesproject.eyes_project_back.global.exceptions.DomainException;
+import org.springframework.security.authentication.BadCredentialsException;
 import br.com.eyesproject.eyes_project_back.modules.auth.application.ports.out.TokenProvider;
 import br.com.eyesproject.eyes_project_back.modules.auth.presentation.dto.LoginRequest;
 import br.com.eyesproject.eyes_project_back.modules.auth.presentation.dto.LoginResponse;
@@ -65,15 +65,15 @@ class LoginUseCaseImplTest {
     }
 
     @Test
-    @DisplayName("Should throw DomainException when user email implies not found")
-    void shouldThrowDomainExceptionWhenEmailNotFound() {
+    @DisplayName("Should throw BadCredentialsException when user email implies not found")
+    void shouldThrowBadCredentialsExceptionWhenEmailNotFound() {
         // Arrange
         LoginRequest request = new LoginRequest("nonexistent@test.com", "raw_password");
 
         when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
         // Act & Assert
-        DomainException exception = assertThrows(DomainException.class, () -> loginUseCase.execute(request));
+        BadCredentialsException exception = assertThrows(BadCredentialsException.class, () -> loginUseCase.execute(request));
         assertEquals("Dados de acesso inválidos", exception.getMessage());
 
         verify(userRepository, times(1)).findByEmail(request.getEmail());
@@ -82,8 +82,8 @@ class LoginUseCaseImplTest {
     }
 
     @Test
-    @DisplayName("Should throw DomainException when user is inactive")
-    void shouldThrowDomainExceptionWhenUserIsInactive() {
+    @DisplayName("Should throw BadCredentialsException when user is inactive")
+    void shouldThrowBadCredentialsExceptionWhenUserIsInactive() {
         // Arrange
         User inactiveUser = UserFactory.createInactiveUser();
         LoginRequest request = new LoginRequest(inactiveUser.getEmail(), "raw_password");
@@ -91,8 +91,8 @@ class LoginUseCaseImplTest {
         when(userRepository.findByEmail(request.getEmail())).thenReturn(Optional.of(inactiveUser));
 
         // Act & Assert
-        DomainException exception = assertThrows(DomainException.class, () -> loginUseCase.execute(request));
-        assertEquals("Conta de usuário desativada", exception.getMessage());
+        BadCredentialsException exception = assertThrows(BadCredentialsException.class, () -> loginUseCase.execute(request));
+        assertEquals("Dados de acesso inválidos", exception.getMessage());
 
         verify(userRepository, times(1)).findByEmail(request.getEmail());
         verify(passwordEncoder, never()).matches(anyString(), anyString());
@@ -100,8 +100,8 @@ class LoginUseCaseImplTest {
     }
 
     @Test
-    @DisplayName("Should throw DomainException when password does not match")
-    void shouldThrowDomainExceptionWhenPasswordIsInvalid() {
+    @DisplayName("Should throw BadCredentialsException when password does not match")
+    void shouldThrowBadCredentialsExceptionWhenPasswordIsInvalid() {
         // Arrange
         User user = UserFactory.createValidUser();
         LoginRequest request = new LoginRequest(user.getEmail(), "wrong_password");
@@ -110,7 +110,7 @@ class LoginUseCaseImplTest {
         when(passwordEncoder.matches(request.getPassword(), user.getPassword())).thenReturn(false);
 
         // Act & Assert
-        DomainException exception = assertThrows(DomainException.class, () -> loginUseCase.execute(request));
+        BadCredentialsException exception = assertThrows(BadCredentialsException.class, () -> loginUseCase.execute(request));
         assertEquals("Dados de acesso inválidos", exception.getMessage());
 
         verify(userRepository, times(1)).findByEmail(request.getEmail());
