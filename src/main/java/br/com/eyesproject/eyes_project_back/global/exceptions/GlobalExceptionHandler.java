@@ -28,6 +28,12 @@ public class GlobalExceptionHandler {
 
     private final ApiProblemFactory problemFactory;
 
+    @ExceptionHandler(org.springframework.security.authentication.BadCredentialsException.class)
+    public ResponseEntity<ProblemDetail> handleBadCredentials(Exception ex, HttpServletRequest request) {
+        return response(HttpStatus.UNAUTHORIZED, "INVALID_CREDENTIALS", "Credenciais inválidas",
+                "Dados de acesso inválidos", request);
+    }
+
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<ProblemDetail> handleNotFound(ResourceNotFoundException ex, HttpServletRequest request) {
         return response(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND", "Recurso não encontrado", ex.getMessage(), request);

@@ -86,6 +86,33 @@ class InvitationActivationPostgresIntegrationTest extends PostgresContainerInteg
     }
 
     @Test
+    @DisplayName("Unknown, inactive and wrong-password login share a safe HTTP 401")
+    void invalidCredentialsHaveTheSamePublicContract() throws Exception {
+        User active = saveUser("Login active", "login-active@example.com", UserRole.STUDENT, true);
+        active.setPassword(passwordEncoder.encode("correct-password"));
+        userRepository.save(active);
+        User inactive = saveUser("Login inactive", "login-inactive@example.com", UserRole.STUDENT, false);
+        inactive.setPassword(passwordEncoder.encode("correct-password"));
+        userRepository.save(inactive);
+        for (String email : List.of("unknown@example.com", active.getEmail(), inactive.getEmail())) {
+            mockMvc.perform(post("/api/v1/auth/login")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"email\":\"" + email + "\",\"password\":\"wrong-password\"}"))
+                    .andExpect(status().isUnauthorized())
+                    .andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"))
+                    .andExpect(jsonPath("$.detail").value("Dados de acesso inválidos"))
+                    .andExpect(jsonPath("$.token").doesNotExist())
+                    .andExpect(jsonPath("$.correlationId").isNotEmpty());
+        }
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"login-active@example.com\",\"password\":\"correct-password\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").isNotEmpty())
+                .andExpect(jsonPath("$.user.role").value("STUDENT"));
+    }
+
+    @Test
     @DisplayName("Anonymous invitee activates an account once with a valid SETUP token")
     void anonymousInviteeCanActivateAccountOnlyOnce() throws Exception {
         User invitedUser = saveUser("Invitee", "invitee@example.com", UserRole.STUDENT, false);

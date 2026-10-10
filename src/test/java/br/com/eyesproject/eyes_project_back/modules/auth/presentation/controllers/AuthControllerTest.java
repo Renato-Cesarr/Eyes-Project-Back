@@ -76,6 +76,20 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("Invalid credentials return a safe 401 ProblemDetail")
+    void shouldReturnNeutralUnauthorizedForBadCredentials() throws Exception {
+        when(loginUseCase.execute(any(LoginRequest.class)))
+                .thenThrow(new org.springframework.security.authentication.BadCredentialsException("private diagnostic"));
+        mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"email\":\"invalid@eyes.test\",\"password\":\"wrong-password\"}"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code").value("INVALID_CREDENTIALS"))
+                .andExpect(jsonPath("$.detail").value("Dados de acesso inválidos"))
+                .andExpect(jsonPath("$.correlationId").isNotEmpty());
+    }
+
+    @Test
     @DisplayName("POST /api/v1/auth/login - Should return 400 Bad Request on invalid input")
     void shouldReturnBadRequestOnInvalidLoginInput() throws Exception {
         LoginRequest request = new LoginRequest("invalid-email", "");
