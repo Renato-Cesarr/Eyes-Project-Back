@@ -6,8 +6,10 @@ import br.com.eyesproject.eyes_project_back.global.security.ProblemAuthenticatio
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authorization.AuthorizationDecision;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -30,10 +32,12 @@ public class SecurityConfig {
     private final ProblemAuthenticationEntryPoint authenticationEntryPoint;
     private final ProblemAccessDeniedHandler accessDeniedHandler;
     private final CorsProperties corsProperties;
+    private final Environment environment;
 
     @Bean
     @SuppressWarnings("java:S4502")
     public SecurityFilterChain securityFilterChain(HttpSecurity http) {
+        boolean apiDocsEnabled = environment.getProperty("springdoc.api-docs.enabled", Boolean.class, true);
         try {
             return http
                     // Safe for this stateless API: authentication is accepted only from an explicit
@@ -45,10 +49,12 @@ public class SecurityConfig {
                             .authenticationEntryPoint(authenticationEntryPoint)
                             .accessDeniedHandler(accessDeniedHandler))
                     .authorizeHttpRequests(authorize -> authorize
+                            .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/auth/**").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/users/setup-password").permitAll()
                             .requestMatchers(HttpMethod.POST, "/api/v1/access-requests").permitAll()
-                            .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                            .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html")
+                            .access((authentication, context) -> new AuthorizationDecision(apiDocsEnabled))
                             .requestMatchers("/api/v1/users/**", "/api/v1/audit/**", "/api/v1/access-requests/**")
                             .hasRole("ADMIN")
                             .requestMatchers(HttpMethod.GET, "/api/v1/scan-sessions/aggregate").hasRole("ADMIN")
